@@ -52,6 +52,7 @@ def first(g, s):
             continue
         x = first(g, rhs)
         ret = ret.union(x)
+        """
         i = 0
         while EPSILON in x:
             # note that, if all the symbols are nullable
@@ -60,6 +61,10 @@ def first(g, s):
             x = first(g, rhs[i+1:])
             i += 1
             ret = ret.union(x)
+        """
+    if EPSILON in ret:
+        x = first(g, s[1:])
+        ret = ret.union(x)
     return ret
 
 class Grammar(object):
@@ -123,22 +128,32 @@ class Grammar(object):
             # Where does this symbol occur on RHS ?
             s = set()
             for prodno, idx in self.nonterminals[nt]['prods_rhs']:
+                print('Needed FIRST({}) = {} for FOLLOW({})'.format(
+                    self.prods[prodno].rhs[idx+1:], 
+                    first(self, self.prods[prodno].rhs[idx+1:]), 
+                    nt
+                ))
                 s = s.union(first(self, self.prods[prodno].rhs[idx+1:]))
                 s = s.difference(set([EPSILON]))
             self.nonterminals[nt]['follow'] = s
+            print('FOLLOW({}) = {}'.format(nt, s))
         for prod in self.prods:
+            print('At production {}'.format(prod))
             # Is there a production A -> BC such that C is NULLABLE ?
             lhs, rhs = prod.lhs, prod.rhs
-            for i, symbol in enumerate(reversed(rhs)):
+            reversed_rhs = rhs[::-1]
+            for i, symbol in enumerate(reversed_rhs):
+                print('i = {}, symbol = {}'.format(i, symbol))
                 if symbol not in self.nonterminals.keys():
                     break
-                if self.nonterminals[symbol]['nullable'] and i+1 < len(rhs):
-                    s1 = self.nonterminals[rhs[i+1]]['follow']
+                if self.nonterminals[symbol]['nullable'] :
+                    s1 = self.nonterminals[reversed_rhs[i+1]]['follow']
                     s2 = self.nonterminals[lhs]['follow']
                     s1 = s1.union(s2)
-                    self.nonterminals[rhs[i+1]]['follow'] = s1
-                else:
-                    break
+                    self.nonterminals[reversed_rhs[i+1]]['follow'] = s1
+                    print('Production {} has nullable symbol {}, changed FOLLOW({}) to {}'.format(prod, symbol, reversed_rhs[i+1], s1))
+                
+            print(64*'-')
 
 
 
@@ -149,7 +164,9 @@ if __name__ == '__main__':
     else:
         g = Grammar(sys.argv[1])
     pprint(g.prods)
-    g.build_first()
-    pprint(g.nonterminals)
+    print(64*'-')
     for nt in g.nonterminals.keys():
-        print('FIRST({}) = {}'.format(nt, first(g, [nt])))
+        print('FIRST({}) = {}'.format(nt, g.nonterminals[nt]['first']))
+    print(64*'-')
+    for nt in g.nonterminals.keys():
+        print('FOLLOW({}) = {}'.format(nt, g.nonterminals[nt]['follow']))
