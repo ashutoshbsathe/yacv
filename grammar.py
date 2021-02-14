@@ -81,6 +81,8 @@ class Grammar(object):
             self.prods.append(
                 Production(lhs, rhs)
             )
+        # Augment the grammar
+        self.prods.insert(0, Production('S\'', [self.prods[0].lhs, '$']))
         # Accumulate nonterminal information
         self.nonterminals = OrderedDict()
         for i, prod in enumerate(self.prods):
@@ -104,6 +106,8 @@ class Grammar(object):
             for i, symbol in enumerate(rhs):
                 if symbol in self.nonterminals.keys():
                     self.nonterminals[symbol]['prods_rhs'].append((prodno, i))
+        self.build_first()
+        self.build_follow()
 
     def build_first(self):
         # inefficient method, but should work fine for most small grammars
@@ -115,6 +119,28 @@ class Grammar(object):
 
     def build_follow(self):
         self.nonterminals[self.prods[0].lhs]['follow'].add('$')
+        for nt in self.nonterminals.keys():
+            # Where does this symbol occur on RHS ?
+            s = set()
+            for prodno, idx in self.nonterminals[nt]['prods_rhs']:
+                s = s.union(first(self, self.prods[prodno].rhs[idx+1:]))
+                s = s.difference(set([EPSILON]))
+            self.nonterminals[nt]['follow'] = s
+        for prod in self.prods:
+            # Is there a production A -> BC such that C is NULLABLE ?
+            lhs, rhs = prod.lhs, prod.rhs
+            for i, symbol in enumerate(reversed(rhs)):
+                if symbol not in self.nonterminals.keys():
+                    break
+                if self.nonterminals[symbol]['nullable'] and i+1 < len(rhs):
+                    s1 = self.nonterminals[rhs[i+1]]['follow']
+                    s2 = self.nonterminals[lhs]['follow']
+                    s1 = s1.union(s2)
+                    self.nonterminals[rhs[i+1]]['follow'] = s1
+                else:
+                    break
+
+
 
 if __name__ == '__main__':
     import sys
