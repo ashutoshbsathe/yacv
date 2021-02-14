@@ -146,11 +146,16 @@ class Grammar(object):
                 print('i = {}, symbol = {}'.format(i, symbol))
                 if symbol not in self.nonterminals.keys():
                     break
-                if self.nonterminals[symbol]['nullable'] :
+                if self.nonterminals[symbol]['nullable'] and (i+1) < len(rhs):
                     s1 = self.nonterminals[reversed_rhs[i+1]]['follow']
                     s2 = self.nonterminals[lhs]['follow']
                     s1 = s1.union(s2)
                     self.nonterminals[reversed_rhs[i+1]]['follow'] = s1
+                    if i == 0:
+                        s3 = self.nonterminals[symbol]['follow']
+                        s3 = s3.union(s2)
+                        self.nonterminals[symbol]['follow'] = s3
+                        print('Production {} has nullable symbol {} at the end, updated FOLLOW({}) = {}'.format(prod, symbol, symbol, s3))
                     print('Production {} has nullable symbol {}, changed FOLLOW({}) to {}'.format(prod, symbol, reversed_rhs[i+1], s1))
                 
             print(64*'-')
