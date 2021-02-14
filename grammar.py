@@ -64,7 +64,8 @@ class Grammar(object):
         lines = [x.strip() for x in open(fname).readlines()] 
         self.prods = [] # list containing all the productions
         for line in lines:
-            # TODO: Find out erroneous grammars if the following generate a `ValuError`
+            # TODO: If ValueError is generated when splitting
+            # report unrecognized grammar
             if line == '':
                 continue
             lhs, rhs = line.split('->')
@@ -97,43 +98,20 @@ class Grammar(object):
         # Update nonterminals_on_rhs for every prod using above data
         for prodno, prod in enumerate(self.prods):
             lhs, rhs = prod.lhs, prod.rhs
-            print(lhs, rhs)
             for i, symbol in enumerate(rhs):
                 if symbol in self.nonterminals.keys():
                     self.nonterminals[symbol]['prods_rhs'].append((prodno, i))
-            if rhs[0] not in self.nonterminals.keys():
-                self.nonterminals[lhs]['first'].add(rhs[0])
-                if rhs[0] == EPSILON:
-                    self.nonterminals[lhs]['nullable'] = True
-        self.nonterminals[self.prods[0].lhs]['follow'].add('$')
-        # Calculate FIRST set for every non terminal
-        self.build_first()
-        # Calculate FOLLOW set for every non terminal
-        self.build_follow()
 
     def build_first(self):
-        nonempty_firsts = []
-        for symbol, info in self.nonterminals.items():
-            if info['first']:
-                nonempty_firsts.append(symbol)
-        while nonempty_firsts:
-            symbol = nonempty_firsts.pop(0)
-            # If this symbol appears in front of some prod, add that
-            for prodno, idx in self.nonterminals[symbol]['prods_rhs']:
-                if idx == 0 and self.prods[prodno].lhs != symbol:
-                    new_symbol = self.prods[prodno].lhs
-                    print('Found production {} where FIRST({}) = FIRST({})'.format(
-                        self.prods[prodno], self.prods[prodno].lhs, symbol
-                    ))
-                    # make union of 2 first sets
-                    tmp = self.nonterminals[new_symbol]['first'].union(
-                        self.nonterminals[symbol]['first']
-                    )
-                    self.nonterminals[new_symbol]['first'] = tmp
-                    nonempty_firsts.append(new_symbol)
+        # inefficient method, but should work fine for most small grammars
+        for nt in self.nonterminals.keys():
+            tmp = first(self, [nt])
+            if EPSILON in tmp:
+                self.nonterminals[nt]['nullable'] = True
+            self.nonterminals[nt]['first'] = tmp
 
     def build_follow(self):
-        pass
+        self.nonterminals[self.prods[0].lhs]['follow'].add('$')
 
 if __name__ == '__main__':
     import sys
@@ -142,6 +120,7 @@ if __name__ == '__main__':
     else:
         g = Grammar(sys.argv[1])
     pprint(g.prods)
+    g.build_first()
     pprint(g.nonterminals)
     for nt in g.nonterminals.keys():
         print('FIRST({}) = {}'.format(nt, first(g, [nt])))
