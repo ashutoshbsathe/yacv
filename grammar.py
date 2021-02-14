@@ -71,6 +71,7 @@ class Grammar(object):
     def __init__(self, fname='simple-grammar.txt'):
         lines = [x.strip() for x in open(fname).readlines()] 
         self.prods = [] # list containing all the productions
+        all_symbols = set()
         for line in lines:
             # TODO: If ValueError is generated when splitting
             # report unrecognized grammar
@@ -86,6 +87,7 @@ class Grammar(object):
             self.prods.append(
                 Production(lhs, rhs)
             )
+            all_symbols = all_symbols.union(rhs)
         # Augment the grammar
         self.prods.insert(0, Production('S\'', [self.prods[0].lhs, '$']))
         # Accumulate nonterminal information
@@ -105,6 +107,10 @@ class Grammar(object):
                 }
             else:
                 self.nonterminals[lhs]['prods_lhs'].append(i)
+        self.terminals = all_symbols.difference(set(self.nonterminals.keys()))
+        if EPSILON in self.terminals:
+            self.terminals = self.terminals.difference(set([EPSILON]))
+            self.terminals.add('$')
         # Update nonterminals_on_rhs for every prod using above data
         for prodno, prod in enumerate(self.prods):
             lhs, rhs = prod.lhs, prod.rhs
