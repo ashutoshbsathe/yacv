@@ -47,6 +47,9 @@ def first(g, s):
     ret = set()
     for prodno in g.nonterminals[s[0]]['prods_lhs']:
         rhs = g.prods[prodno].rhs
+        if rhs[0] == s[0]:
+            # left recursion
+            continue
         x = first(g, rhs)
         ret = ret.union(x)
         i = 0
