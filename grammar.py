@@ -13,6 +13,14 @@ class Production(object):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        if not isinstance(other, Production):
+            return False
+        return self.lhs == other.lhs and self.rhs == other.rhs
+    
+    def __ne__(self, other):
+        return not self == other
+
 class LRParserItem(object):
     def __init__(self, production=None, dot_pos=0, lookaheads=[], lr1=True):
         self.production = production
