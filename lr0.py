@@ -35,7 +35,7 @@ class LR0Item(object):
                 )
 
     def __repr__(self):
-        return str(self)
+        return '< ' + str(self) + ' > at {}'.format(hex(id(self)))
 
 class LR0Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):

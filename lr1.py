@@ -37,7 +37,7 @@ class LR1Item(object):
                 )
 
     def __repr__(self):
-        return str(self)
+        return '< ' + str(self) + ' > at {}'.format(hex(id(self)))
 
 class LR1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
@@ -76,11 +76,19 @@ class LR1Parser(object):
                 else:
                     visited_symbols.add(next_symbol)
                 prodnos = self.grammar.nonterminals[next_symbol]['prods_lhs']
-                lookaheads = list(
+                print('next_symbol = {}, FIRST({}) = {}'.format(
+                        next_symbol,
+                        item.production.rhs[item.dot_pos+1:]+['$'],
+                        first(
+                            self.grammar,
+                            item.production.rhs[item.dot_pos:]+item.lookaheads
+                        )
+                    ))
+                lookaheads = sorted(list(
                     first(self.grammar, 
-                          item.production.rhs[item.dot_pos+1:]+['$'])
+                          item.production.rhs[item.dot_pos:]+item.lookaheads)
                     .difference(set([EPSILON]))
-                )
+                ))
                 for prodno in prodnos:
                     # print('Attempting to add new production {}'.format(self.grammar.prods[prodno]))
                     new_item = LR1Item(
@@ -141,8 +149,11 @@ class LR1Parser(object):
             else:
                 continue
             """
-            self.automaton_states.append(tuple(deepcopy(state)))
-            self.automaton_transitions['s' + str(state_id)] = {}
+            for item in state:
+                item.lookaheads = sorted(item.lookaheads)
+            if state_string not in unique_states:
+                self.automaton_states.append(tuple(deepcopy(state)))
+                self.automaton_transitions['s' + str(state_id)] = {}
             next_symbols = {}
             print('state = {}'.format(state_string))
             for item in state:
@@ -166,11 +177,18 @@ class LR1Parser(object):
                     queue.append((new_state, num_states))
                     self.automaton_transitions['s' + str(state_id)][symbol] = \
                             's' + str(num_states)
+                    self.automaton_states.append(tuple(deepcopy(new_state)))
+                    self.automaton_transitions['s' + str(num_states)] = {}
                 else:
                     # TODO: Find a better way for this
+                    pprint(unique_states)
+                    print('Matching state ="{}"'.format(new_state_string))
                     for i, x in enumerate(self.automaton_states):
+                        print('Is it {} ?'.format(self.stringify_state(x)))
                         if self.stringify_state(x) == new_state_string:
+                            print('Found match')
                             new_state_id = i
+                    pprint(queue)
                     self.automaton_transitions['s' + str(state_id)][symbol] = \
                             's' + str(new_state_id)
 
