@@ -1,6 +1,9 @@
 from grammar import Grammar, first, EPSILON
 import pandas as pd
 from pprint import pprint
+
+ERROR = 'ERR'
+ACCEPT = 'ACC'
 class LL1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
         self.grammar = Grammar(fname)
@@ -8,7 +11,7 @@ class LL1Parser(object):
             columns=self.grammar.terminals,
             index=self.grammar.nonterminals.keys()
         )
-        self.parsing_table.loc[:,:] = 'ERROR'
+        self.parsing_table.loc[:,:] = ERROR
         pprint(self.parsing_table)
         self.build_parsing_table()
 
@@ -18,12 +21,12 @@ class LL1Parser(object):
             first_rhs = first(self.grammar, rhs)
             for terminal in first_rhs:
                 if terminal is not EPSILON:
-                    if self.parsing_table.at[lhs, terminal] == 'ERROR':
+                    if self.parsing_table.at[lhs, terminal] == ERROR:
                         self.parsing_table.at[lhs, terminal] = []
                     self.parsing_table.at[lhs, terminal].append(prod)
                 else:
                     for symbol in self.grammar.nonterminals[lhs]['follow']:
-                        if self.parsing_table.at[lhs, symbol] == 'ERROR':
+                        if self.parsing_table.at[lhs, symbol] == ERROR:
                             self.parsing_table.at[lhs, symbol] = []
                         self.parsing_table.at[lhs, symbol].append(prod)
                     break

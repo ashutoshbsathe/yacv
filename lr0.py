@@ -4,6 +4,11 @@ from copy import deepcopy
 from collections import OrderedDict
 import pandas as pd
 
+ACTION = 'ACTION'
+ACCEPT = 'ACC'
+ERROR  = 'ERR'
+GOTO   = 'GOTO'
+
 class LR0Item(object):
     def __init__(self, production=None, dot_pos=0):
         # A -> . a A, dot_pos = 0
@@ -38,15 +43,15 @@ class LR0Parser(object):
         self.automaton_states = []
         self.automaton_transitions = OrderedDict()
         self.build_automaton()
-        tuples = [('ACTION', symbol) for symbol in self.grammar.terminals] + \
-            [('GOTO', symbol) for symbol in self.grammar.nonterminals.keys()]
+        tuples = [(ACTION, symbol) for symbol in self.grammar.terminals] + \
+            [(GOTO, symbol) for symbol in self.grammar.nonterminals.keys()]
         columns = pd.MultiIndex.from_tuples([('', x[0]) 
             if pd.isnull(x[1]) else x for x in tuples])
         self.parsing_table = pd.DataFrame(
             columns = columns,
             index = self.automaton_transitions.keys()
         )
-        self.parsing_table.loc[:,:] = 'ERROR'
+        self.parsing_table.loc[:,:] = ERROR
         self.build_parsing_table()
     
     def closure(self, i):
@@ -166,12 +171,12 @@ class LR0Parser(object):
         for state_id, transitions in self.automaton_transitions.items():
             state = self.automaton_states[int(state_id[1:])]
             if self.is_accept_state(state):
-                col = ('ACTION', '$')
-                self.parsing_table.at[state_id, col] = 'ACCEPT'
+                col = (ACTION, '$')
+                self.parsing_table.at[state_id, col] = ACCEPT
             elif self.is_reduce_state(state):
                 for symbol in self.grammar.terminals:
-                    col = ('ACTION', symbol)
-                    if self.parsing_table.at[state_id, col] == 'ERROR':
+                    col = (ACTION, symbol)
+                    if self.parsing_table.at[state_id, col] == ERROR:
                         self.parsing_table.at[state_id, col] = []
                     for item in state:
                         if item.reduce:
@@ -181,11 +186,11 @@ class LR0Parser(object):
             for symbol, new_state in transitions.items():
                 if symbol in terminals:
                     entry = new_state
-                    col = ('ACTION', symbol)
+                    col = (ACTION, symbol)
                 else:
                     entry = new_state[1:]
-                    col = ('GOTO', symbol)
-                if self.parsing_table.at[state_id, col] == 'ERROR':
+                    col = (GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == ERROR:
                     self.parsing_table.at[state_id, col] = []
                 self.parsing_table.at[state_id, col].append(entry)
 
