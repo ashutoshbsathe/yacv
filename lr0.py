@@ -6,7 +6,7 @@ import pandas as pd
 
 ACTION = 'ACTION'
 ACCEPT = 'ACC'
-ERROR  = 'ERR'
+ERROR  = ''
 GOTO   = 'GOTO'
 
 class LR0Item(object):
@@ -156,11 +156,15 @@ class LR0Parser(object):
                     queue.append((new_state, num_states))
                     self.automaton_transitions['s' + str(state_id)][symbol] = \
                             's' + str(num_states)
+                else:
+                    # TODO: Find a better way for this
+                    for i, x in enumerate(self.automaton_states):
+                        if self.stringify_state(x) == new_state_string:
+                            new_state_id = i
+                    self.automaton_transitions['s' + str(state_id)][symbol] = \
+                            's' + str(new_state_id)
 
             print(64 *'-')
-            # counter -= 1
-            # if counter < 0:
-            #    break
         pprint(self.automaton_states)
         pprint(self.automaton_transitions)
     

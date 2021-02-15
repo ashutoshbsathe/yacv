@@ -2,7 +2,7 @@ from grammar import Grammar, first, EPSILON
 import pandas as pd
 from pprint import pprint
 
-ERROR = 'ERR'
+ERROR = ''
 ACCEPT = 'ACC'
 class LL1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
@@ -29,7 +29,6 @@ class LL1Parser(object):
                         if self.parsing_table.at[lhs, symbol] == ERROR:
                             self.parsing_table.at[lhs, symbol] = []
                         self.parsing_table.at[lhs, symbol].append(prod)
-                    break
         pprint(self.parsing_table)
 
 
