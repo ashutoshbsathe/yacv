@@ -38,9 +38,12 @@ class LR0Parser(object):
         self.automaton_states = []
         self.automaton_transitions = OrderedDict()
         self.build_automaton()
+        tuples = [('ACTION', symbol) for symbol in self.grammar.terminals] + \
+            [('GOTO', symbol) for symbol in self.grammar.nonterminals.keys()]
+        columns = pd.MultiIndex.from_tuples([('', x[0]) 
+            if pd.isnull(x[1]) else x for x in tuples])
         self.parsing_table = pd.DataFrame(
-            columns = list(self.grammar.terminals) + \
-                      list(self.grammar.nonterminals.keys()),
+            columns = columns,
             index = self.automaton_transitions.keys()
         )
         self.parsing_table.loc[:,:] = 'ERROR'
@@ -163,21 +166,28 @@ class LR0Parser(object):
         for state_id, transitions in self.automaton_transitions.items():
             state = self.automaton_states[int(state_id[1:])]
             if self.is_accept_state(state):
-                self.parsing_table.at[state_id, '$'] = 'ACCEPT'
+                col = ('ACTION', '$')
+                self.parsing_table.at[state_id, col] = 'ACCEPT'
             elif self.is_reduce_state(state):
                 for symbol in self.grammar.terminals:
-                    if self.parsing_table.at[state_id, symbol] == 'ERROR':
-                        self.parsing_table.at[state_id, symbol] = []
+                    col = ('ACTION', symbol)
+                    if self.parsing_table.at[state_id, col] == 'ERROR':
+                        self.parsing_table.at[state_id, col] = []
                     for item in state:
                         if item.reduce:
                             prod_id = self.grammar.prods.index(item.production)
                             entry = 'r' + str(prod_id)
-                            self.parsing_table.at[state_id, symbol].append(entry)
+                            self.parsing_table.at[state_id, col].append(entry)
             for symbol, new_state in transitions.items():
-                entry = new_state if symbol in terminals else new_state[1:]
-                if self.parsing_table.at[state_id, symbol] == 'ERROR':
-                    self.parsing_table.at[state_id, symbol] = []
-                self.parsing_table.at[state_id, symbol].append(entry)
+                if symbol in terminals:
+                    entry = new_state
+                    col = ('ACTION', symbol)
+                else:
+                    entry = new_state[1:]
+                    col = ('GOTO', symbol)
+                if self.parsing_table.at[state_id, col] == 'ERROR':
+                    self.parsing_table.at[state_id, col] = []
+                self.parsing_table.at[state_id, col].append(entry)
 
         pprint(self.parsing_table)
                     
