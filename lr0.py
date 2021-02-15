@@ -1,6 +1,8 @@
 from grammar import Grammar, first, EPSILON
 from pprint import pprint
 from copy import deepcopy
+from collections import OrderedDict
+import pandas as pd
 
 class LR0Item(object):
     def __init__(self, production=None, dot_pos=0):
@@ -13,7 +15,8 @@ class LR0Item(object):
 
     def update_reduce(self):
         if self.dot_pos == len(self.production.rhs) \
-            or self.production.rhs[self.dot_pos] == '$':
+            or self.production.rhs[self.dot_pos] == '$' \
+            or self.production.rhs[self.dot_pos] == EPSILON:
             self.reduce = True
         else:
             self.reduce = False
@@ -33,8 +36,15 @@ class LR0Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
         self.grammar = Grammar(fname)
         self.automaton_states = []
-        self.automaton_transitions = {}
+        self.automaton_transitions = OrderedDict()
         self.build_automaton()
+        self.parsing_table = pd.DataFrame(
+            columns = list(self.grammar.terminals) + \
+                      list(self.grammar.nonterminals.keys()),
+            index = self.automaton_transitions.keys()
+        )
+        self.parsing_table.loc[:,:] = 'ERROR'
+        self.build_parsing_table()
     
     def closure(self, i):
         # i is an LR0Item
@@ -72,7 +82,7 @@ class LR0Parser(object):
     
     def is_reduce_state(self, state):
         if isinstance(state, tuple):
-            state = list(*state)
+            state = list(state)
         elif not isinstance(state, list):
             raise ValueError('type(state) must be tuple or list, received {}'.format(type(state)))
         for item in state:
@@ -80,9 +90,19 @@ class LR0Parser(object):
                 return True
         return False
 
+    def is_accept_state(self, state):
+        if isinstance(state, tuple):
+            state = list(state)
+        elif not isinstance(state, list):
+            raise ValueError('type(state) must be tuple or list, received {}'.format(type(state)))
+        for item in state:
+            if item.reduce and self.grammar.prods.index(item.production) == 0:
+                return True
+        return False
+
     def stringify_state(self, state):
         if isinstance(state, tuple):
-            state = list(*state)
+            state = list(state)
         elif not isinstance(state, list):
             raise ValueError('type(state) must be tuple or list, received {}'.format(type(state)))
         return '\n'.join([str(x) for x in state])
@@ -135,7 +155,32 @@ class LR0Parser(object):
             #    break
         pprint(self.automaton_states)
         pprint(self.automaton_transitions)
+    
+    def build_parsing_table(self):
+        pprint(self.parsing_table)
+        print(self.grammar.prods)
+        terminals = self.grammar.terminals
+        for state_id, transitions in self.automaton_transitions.items():
+            state = self.automaton_states[int(state_id[1:])]
+            if self.is_accept_state(state):
+                self.parsing_table.at[state_id, '$'] = 'ACCEPT'
+            elif self.is_reduce_state(state):
+                for symbol in self.grammar.terminals:
+                    if self.parsing_table.at[state_id, symbol] == 'ERROR':
+                        self.parsing_table.at[state_id, symbol] = []
+                    for item in state:
+                        if item.reduce:
+                            prod_id = self.grammar.prods.index(item.production)
+                            entry = 'r' + str(prod_id)
+                            self.parsing_table.at[state_id, symbol].append(entry)
+            for symbol, new_state in transitions.items():
+                entry = new_state if symbol in terminals else new_state[1:]
+                if self.parsing_table.at[state_id, symbol] == 'ERROR':
+                    self.parsing_table.at[state_id, symbol] = []
+                self.parsing_table.at[state_id, symbol].append(entry)
 
+        pprint(self.parsing_table)
+                    
 
 if __name__ == '__main__':
     import sys
