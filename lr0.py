@@ -199,11 +199,45 @@ class LR0Parser(object):
                 self.parsing_table.at[state_id, col].append(entry)
 
         pprint(self.parsing_table)
-                    
+
+class SLR1Parser(LR0Parser):
+    def build_parsing_table(self):
+        pprint(self.parsing_table)
+        terminals = self.grammar.terminals
+        for state_id, transitions in self.automaton_transitions.items():
+            state = self.automaton_states[int(state_id[1:])]
+            if self.is_accept_state(state):
+                col = (ACTION, '$')
+                self.parsing_table.at[state_id, col] = ACCEPT
+            elif self.is_reduce_state(state):
+                for item in state:
+                    if item.reduce:
+                        lhs = item.production.lhs
+                        follow = self.grammar.nonterminals[lhs]['follow']
+                        prod_id = self.grammar.prods.index(item.production)
+                        entry = 'r' + str(prod_id)
+                        for symbol in follow:
+                            col = (ACTION, symbol)
+                            if self.parsing_table.at[state_id, col] == ERROR:
+                                self.parsing_table.at[state_id, col] = []
+                            self.parsing_table.at[state_id, col].append(entry)
+            for symbol, new_state in transitions.items():
+                if symbol in terminals:
+                    entry = new_state
+                    col = (ACTION, symbol)
+                else:
+                    entry = new_state[1:]
+                    col = (GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == ERROR:
+                    self.parsing_table.at[state_id, col] = []
+                self.parsing_table.at[state_id, col].append(entry)
+        pprint(self.parsing_table)
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
-        lr0 = LR0Parser(sys.argv[1])
+        #lr0 = LR0Parser(sys.argv[1])
+        slr1 = SLR1Parser(sys.argv[1])
     else:
-        lr0 = LR0Parser()
+        #lr0 = LR0Parser()
+        slr1 = SLR1Parser()
