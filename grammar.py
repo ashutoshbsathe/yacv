@@ -119,6 +119,7 @@ class Grammar(object):
         if EPSILON in self.terminals:
             self.terminals = self.terminals.difference(set([EPSILON]))
         self.terminals.add('$')
+        self.terminals = sorted(self.terminals)
         # Update nonterminals_on_rhs for every prod using above data
         for prodno, prod in enumerate(self.prods):
             lhs, rhs = prod.lhs, prod.rhs
