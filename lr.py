@@ -8,6 +8,7 @@ ACTION = 'ACTION'
 ACCEPT = 'ACC'
 ERROR  = ''
 GOTO   = 'GOTO'
+DOT    = '•'
 
 class LRItem(object):
     def __init__(self, production=None, dot_pos=0, lookaheads=[]):
@@ -28,9 +29,10 @@ class LRItem(object):
         lhs, rhs = self.production.lhs, self.production.rhs
         lookaheads = sorted(self.lookaheads)
         dot_pos = self.dot_pos
-        ret = '{} -> {}•{}'.format(
+        ret = '{} -> {}{}{}'.format(
                 lhs,
                 ''.join(rhs[:dot_pos]) if dot_pos > 0 else '',
+                DOT,
                 ''.join(rhs[dot_pos:])
                 )
         if lookaheads:
@@ -52,6 +54,7 @@ class LRAutomatonState(object):
         self.preferred_action = preferred_action
         self.shift_items = []
         self.reduce_items = []
+        self.accept = False # is accepting state ?
         self.update_shift_reduce_items()
         self.update_conflicts()
 
@@ -60,6 +63,8 @@ class LRAutomatonState(object):
             item.update_reduce()
             if item.reduce:
                 self.reduce_items.append(i)
+                if item.production.rhs[-1] == '$':
+                    self.accept = True
             else:
                 self.shift_items.append(i)
 
@@ -73,9 +78,9 @@ class LRAutomatonState(object):
             self.sr = True
             self.conflict = True
 
-    def __str__(self):
+    def __str__(self, join_on='\n'):
         # TODO: Can provide some customization here
-        return '\\n'.join([str(item) for item in self.items])
+        return join_on.join([str(item) for item in self.items])
 
     def __repr__(self):
         return '< LRAutomatonState with items: ' + str(self) + \
@@ -215,18 +220,38 @@ class LRParser(object):
         G = pgv.AGraph(rankdir='LR', directed=True)
         G.add_node(-1, style='invis')
         for i, state in enumerate(self.automaton_states):
-            G.add_node(i, label='State {}\\n\\n'.format(i) + str(state))
+            label = '<U><B>State {}<BR/></B></U>'.format(i) + \
+                    state.__str__(join_on='<BR/>') 
+            label = label.replace(DOT, '&#xB7;')
+            label = label.replace('->', '&#10132;')
+            label = '<' + label + '>'
+            print(label)
+            if len(state.reduce_items) > 0:
+                # This is a reduce state
+                fillcolor = '#90EE90' if state.accept else '#85CAF6'
+                G.add_node(i, label=label, peripheries=2, 
+                            style='filled', fillcolor=fillcolor)
+                print('Added reduce node')
+            else:
+                G.add_node(i, label=label)
+                print('Added node')
+            print(64*'-')
         G.add_edge(-1, 0)
         for state, transitions in self.automaton_transitions.items():
             for symbol, new_state in transitions.items():
                 G.add_edge(state, new_state, label=symbol)
 
-        G.layout('dot')
-        G.node_attr['shape'] = 'box'
-        G.draw('sample.png')
         G.write('sample.dot')
+        G.node_attr['shape'] = 'box'
+        G.node_attr['height'] = 0
+        G.node_attr['width'] = 0
+        G.node_attr['margin'] = 0.05
+        G.layout('dot')
+        G.draw('sample.png')
 
 class LR0Parser(LRParser):
+    # TODO: Can we support epsilon LR(0) parsers ?
+    # Ref: Parsing Techniques - Practical Guide 2nd Edition Sec.9.5.4
     def build_automaton(self):
         if self.automaton_built:
             # TODO: Warn user
