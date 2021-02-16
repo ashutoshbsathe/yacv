@@ -127,8 +127,7 @@ class LRParser(object):
                 print(type(item.lookaheads))
                 if item.lookaheads:
                     f = first(self.grammar, 
-                            item.production.rhs[item.dot_pos+1:] +\
-                            list(item.lookaheads))
+                            item.production.rhs[item.dot_pos+1:])
                     if EPSILON not in f:
                         f = f.union(set(item.lookaheads).difference(['$']))
                     else:
