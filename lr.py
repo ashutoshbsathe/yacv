@@ -128,8 +128,12 @@ class LRParser(object):
                 if item.lookaheads:
                     f = first(self.grammar, 
                             item.production.rhs[item.dot_pos+1:] +\
-                            list(item.lookaheads)).difference(set([EPSILON]))
-                    f = f.union(set(item.lookaheads))
+                            list(item.lookaheads))
+                    if EPSILON not in f:
+                        f = f.union(set(item.lookaheads).difference(['$']))
+                    else:
+                        f = f.union(set(item.lookaheads))
+                    f = f.difference([EPSILON])
                 else:
                     f = []
                 new_item = LRItem(prod, 0, f)
