@@ -75,7 +75,7 @@ class LRAutomatonState(object):
 
     def __str__(self):
         # TODO: Can provide some customization here
-        return '\n'.join([str(item) for item in self.items])
+        return '\\n'.join([str(item) for item in self.items])
 
     def __repr__(self):
         return '< LRAutomatonState with items: ' + str(self) + \
@@ -211,6 +211,22 @@ class LRParser(object):
     def build_parsing_table(self):
         pass
 
+    def visualize_automaton(self):
+        import pygraphviz as pgv
+        G = pgv.AGraph(rankdir='LR', directed=True)
+        G.add_node(-1, style='invis')
+        for i, state in enumerate(self.automaton_states):
+            G.add_node(i, label='State {}\\n\\n'.format(i) + str(state))
+        G.add_edge(-1, 0)
+        for state, transitions in self.automaton_transitions.items():
+            for symbol, new_state in transitions.items():
+                G.add_edge(state, new_state, label=symbol)
+
+        G.layout('dot')
+        G.node_attr['shape'] = 'box'
+        G.draw('sample.png')
+        G.write('sample.dot')
+
 class LR0Parser(LRParser):
     def build_automaton(self):
         if self.automaton_built:
@@ -254,3 +270,4 @@ if __name__ == '__main__':
     for i, state in enumerate(p.automaton_states):
         print('State {} = {}\n'.format(i, state) + 64*'-')
     pprint(p.automaton_transitions)
+    p.visualize_automaton()
