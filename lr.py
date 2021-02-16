@@ -92,6 +92,7 @@ class LRParser(object):
         self.grammar = Grammar(fname)
         self.automaton_states = []
         self.automaton_transitions = OrderedDict()
+        self.automaton_built = False
         self.build_automaton()
         tuples = [(ACTION, symbol) for symbol in self.grammar.terminals] + \
             [(GOTO, symbol) for symbol in self.grammar.nonterminals.keys()]
@@ -102,7 +103,7 @@ class LRParser(object):
             index = self.automaton_transitions.keys()
         )
         self.build_parsing_table()
-    
+
     def closure(self, i):
         queue = i if isinstance(i, list) else [i]
         ret = []
@@ -123,32 +124,49 @@ class LRParser(object):
             print('new_prod_ids = {}'.format(prod_ids))
             for prod_id in prod_ids:
                 prod = self.grammar.prods[prod_id]
+                print(type(item.lookaheads))
                 if item.lookaheads:
                     f = first(self.grammar, 
                             item.production.rhs[item.dot_pos+1:] +\
-                            item.lookaheads)
+                            list(item.lookaheads)).difference(set([EPSILON]))
+                    f = f.union(set(item.lookaheads))
                 else:
                     f = []
                 new_item = LRItem(prod, 0, f)
                 print('new_item = {}'.format(new_item))
                 if new_item not in queue and new_item not in ret:
                     queue.append(new_item)
+        kernel_lookaheads = OrderedDict()
+        for item in ret:
+            kernel = LRItem(item.production, item.dot_pos)
+            key = str(kernel)
+            if key not in kernel_lookaheads.keys():
+                kernel_lookaheads[key] = {
+                    'kernel': kernel,
+                    'lookaheads': []
+                }
+            curr = kernel_lookaheads[key]['lookaheads']
+            curr = sorted(list(set(curr).union(item.lookaheads)))
+            kernel_lookaheads[key]['lookaheads'] = curr
+        ret = []
+        for key, val in kernel_lookaheads.items():
+            kernel, lookaheads = val['kernel'], val['lookaheads']
+            item = LRItem(kernel.production, kernel.dot_pos, lookaheads)
+            ret.append(item)
         return ret
 
-    def build_automaton(self):
-        pass
-
-    def build_parsing_table(self):
-        pass
-
-class LR0Parser(LRParser):
-    def build_automaton(self):
-        init = LRAutomatonState(self.closure(LRItem(self.grammar.prods[0], 0)))
+    def build_automaton_from_init(self, init):
+        if self.automaton_built:
+            # TODO: raise a warning here
+            return
+        # init = LRAutomatonState(self.closure(LRItem(self.grammar.prods[0], 0)))
         self.automaton_states.append(init)
+        self.automaton_transitions[0] = OrderedDict()
         visited_states = []
         to_visit = [init]
         while to_visit:
             curr = to_visit.pop(0)
+            curr_idx = self.automaton_states.index(curr)
             print('curr = {}'.format(curr))
             visited_states.append(curr)
             tmp_items = deepcopy(curr.items)
@@ -170,6 +188,8 @@ class LR0Parser(LRParser):
                     # Is next_state completely new ?
                     print('Adding new state {}'.format(next_state))
                     self.automaton_states.append(next_state)
+                    self.automaton_transitions[len(self.automaton_states)-1] = \
+                        OrderedDict()
                     to_visit.append(next_state)
                 elif next_state not in visited_states:
                     # next_state is not new but is not visited either
@@ -177,32 +197,56 @@ class LR0Parser(LRParser):
                 else:
                     # next_state already exists and is visited
                     print('State {} is already visited'.format(next_state))
+                next_idx = self.automaton_states.index(next_state)
+                self.automaton_transitions[curr_idx][key] = next_idx
                 print(32 * '-')
             print(64*'-')
         print('to_visit = empty')
-        
+        self.automaton_built = True
 
+    def build_parsing_table(self):
+        pass
+
+class LR0Parser(LRParser):
+    def build_automaton(self):
+        if self.automaton_built:
+            # TODO: Warn user
+            return
+        init = LRAutomatonState(self.closure(LRItem(self.grammar.prods[0], 0)))
+        self.build_automaton_from_init(init)
+
+class LR1Parser(LRParser): 
+    def build_automaton(self):
+        if self.automaton_built:
+            # TODO: Warn user
+            return
+        init = LRAutomatonState(self.closure(LRItem(
+            self.grammar.prods[0], 0, ['$'])))
+        self.build_automaton_from_init(init)
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         #lr0 = LR0Parser(sys.argv[1])
-        p = LR0Parser(sys.argv[1])
+        p = LR1Parser(sys.argv[1])
     else:
         #lr0 = LR0Parser()
-        p = LR0Parser()
-    """
-    p.closure(
+        p = LR1Parser()
+    
+    ret = p.closure(
         LRItem(
-            slr1.grammar.prods[0],
-            0
+            p.grammar.prods[0],
+            0,
+            # ['$']
         )
     )
-    """
+    pprint(ret)
     """
     for state in p.automaton_states:
         print(state.__repr__())
         print(64 *'-')
     """
     print(p.automaton_states[0] == p.automaton_states[-1])
-    print(len(p.automaton_states))
+    for i, state in enumerate(p.automaton_states):
+        print('State {} = {}\n'.format(i, state) + 64*'-')
+    pprint(p.automaton_transitions)
