@@ -5,6 +5,7 @@ class AbstractSyntaxTree(object):
         if len(args) == 0:
             self.root = None
             self.desc = []
+            self.prod_id = None
         if len(args) == 1:
             if isinstance(args[0], Production):
                 self.root = args[0].lhs
@@ -12,9 +13,11 @@ class AbstractSyntaxTree(object):
                 for symbol in args[0].rhs:
                     desc.append(ParseTree(symbol))
                 self.desc = desc
+                self.prod_id = None
             elif isinstance(args[0], str):
                 self.root = args[0]
                 self.desc = []
+                self.prod_id = None
 
     def __str__(self):
         return '[root = {}, desc = {}]'.format(self.root, self.desc)

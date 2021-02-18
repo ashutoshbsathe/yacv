@@ -2,10 +2,29 @@ from grammar import Grammar, first, EPSILON
 import pandas as pd
 from pprint import pprint
 from abstractsyntaxtree import AbstractSyntaxTree
+import random
 
 ERROR = ''
 ACCEPT = 'ACC'
 INFINITY = 2048
+COLORS = [
+    'coral',
+    'darkmagenta',
+    'darkblue',
+    'darkred',
+    'deeppink',
+    'dodgerblue',
+    'blueviolet',
+    'darkcyan',
+    'deepskyblue',
+    'mediumslateblue',
+    'brown',
+    'orange',
+    'teal',
+    'seagreen',
+    'springgreen',
+    'tomato'
+]
 class LL1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
         self.grammar = Grammar(fname)
@@ -55,6 +74,7 @@ class LL1Parser(object):
                 raise ValueError('Error because parsing table errored out')
             elif self.parsing_table.at[stack[-1].root, a] != ACCEPT:
                 prod = self.parsing_table.at[stack[-1].root, a][0]
+                stack[-1].prod_id = self.grammar.prods.index(prod)
                 print(prod)
                 desc_list = []
                 for symbol in prod.rhs:
@@ -71,9 +91,10 @@ class LL1Parser(object):
     
     def visualize_syntaxtree(self, string):
         import pygraphviz as pgv
+        # Create the parse tree
         tree = self.parse(string)
 
-        # Create the parse tree
+        random.shuffle(COLORS)
         G = pgv.AGraph(name='AbstractSyntaxTree', directed=True)
         node_id = 0
         stack = [(tree, node_id)]
@@ -84,7 +105,11 @@ class LL1Parser(object):
             if str(node) not in G.nodes():
                 G.add_node(node_id, label=top.root)
                 node_id += 1
+            if top.prod_id is not None:
+                color = COLORS[top.prod_id % len(COLORS)]
+                G.get_node(node).attr['fontcolor'] = color
             desc_ids = []
+            # G.get_node(node).attr['label'] += ', {}'.format(top.prod_id)
             for desc in top.desc:
                 if desc.root == EPSILON:
                    label = G.get_node(node).attr['label'] 
@@ -92,7 +117,7 @@ class LL1Parser(object):
                    G.get_node(node).attr['label'] = label
                    break
                 G.add_node(node_id, label=desc.root)
-                G.add_edge(node, node_id)
+                G.add_edge(node, node_id, color=color)
                 desc_ids.append(node_id)
                 stack.append((desc, node_id))
                 node_id += 1
@@ -161,4 +186,4 @@ if __name__ == '__main__':
         ll1 = LL1Parser(sys.argv[1])
     else:
         ll1 = LL1Parser()
-    ll1.visualize_syntaxtree(['id', '+', 'id', '*', '(', 'id', '+', 'id', '*', 'id', ')'])
+    ll1.visualize_syntaxtree(['(', 'id', ')', '*', '(', 'id', '+', 'id', ')'])
