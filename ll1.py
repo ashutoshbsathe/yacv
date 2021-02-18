@@ -40,26 +40,30 @@ class LL1Parser(object):
         if string[-1] != '$':
             string.append('$')
         # stack = ['S\'']
-        stack = ['S\'']
+        stack = [ParseTree('S\'')]
         popped_stack = []
-        while stack[-1] != '$':
-            top = stack[-1]
+        while stack[-1].root != '$':
+            # Don't assign, destroys the tree ref
             a = string[0]
-            if top == a:
+            if stack[-1].root == a:
                 popped_stack.append(stack.pop(-1))
                 a = string.pop(0)
-            elif top in self.grammar.terminals:
+            elif stack[-1].root in self.grammar.terminals:
                 raise ValueError('Error because top = {}, terminal'.format(top))
-            elif self.parsing_table.at[top, a] == ERROR:
+            elif self.parsing_table.at[stack[-1].root, a] == ERROR:
                 raise ValueError('Error because parsing table errored out')
-            elif self.parsing_table.at[top, a] != ACCEPT:
-                prod = self.parsing_table.at[top, a][0]
+            elif self.parsing_table.at[stack[-1].root, a] != ACCEPT:
+                prod = self.parsing_table.at[stack[-1].root, a][0]
                 print(prod)
+                desc_list = []
+                for symbol in prod.rhs:
+                    x = ParseTree(symbol)
+                    stack[-1].desc.append(x)
+                    desc_list.append(x)
                 popped_stack.append(stack.pop(-1))
                 if prod.rhs[0] != EPSILON:
-                    reversed_rhs = list(reversed(prod.rhs))
-                    for symbol in reversed_rhs:
-                        stack.append(symbol)
+                    for i in range(len(desc_list)-1, -1, -1):
+                        stack.append(desc_list[i])
                 pprint(list(reversed(stack)))
                 print(64*'-')
         pprint(popped_stack)
@@ -72,4 +76,4 @@ if __name__ == '__main__':
         ll1 = LL1Parser(sys.argv[1])
     else:
         ll1 = LL1Parser()
-    ll1.parse(['id', '+', 'id'])
+    ll1.parse(['id'])
