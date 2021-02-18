@@ -71,7 +71,9 @@ class LL1Parser(object):
     def visualize_syntaxtree(self, string):
         import pygraphviz as pgv
         tree = self.parse(string)
-        G = pgv.AGraph(directed=True)
+
+        # Create the parse tree
+        G = pgv.AGraph(name='AbstractSyntaxTree', directed=True)
         node_id = 0
         stack = [(tree, node_id)]
         while stack:
@@ -93,7 +95,7 @@ class LL1Parser(object):
         # Perform a DFS to get proper order of terminals
         terminals = self.grammar.terminals
         terminal_nodes = []
-        stack = G.nodes()
+        stack = [G.nodes()[0]]
         visited = []
         while stack:
             node = stack.pop(-1)
@@ -102,28 +104,19 @@ class LL1Parser(object):
                 if node.attr['label'] in terminals:
                     terminal_nodes.append(node)
                 print(node.attr['label'])
-                stack.extend(G.successors(node))
-        t = G.add_subgraph(terminal_nodes, name='terminals')
+                for i in range(len(G.successors(node))-1, -1, -1):
+                    stack.append(G.successors(node)[i])
+                # stack.extend(G.successors(node))
+        print(terminal_nodes)
+        
+        t = G.add_subgraph(terminal_nodes, name='Terminals')
         t.graph_attr['rank'] = 'same'
         for i in range(len(t.nodes())-1):
             print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
                 i, terminal_nodes[i], i+1, terminal_nodes[i+1]
             ))
             t.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
-        """
-        # How to get proper node order ?
-        c = []
-        for node_id in terminal_nodes:
-            c.append(G.get_node(node_id))
-        t = G.add_subgraph(c, name='terminals')
-        t.graph_attr['rank'] = 'same'
-
-        for i in range(len(t.nodes())-1):
-            print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
-                i, t.nodes()[i], i+1, t.nodes()[i+1]
-            ))
-            t.add_edge(t.nodes()[i], t.nodes()[i+1])
-        """
+        
         G.layout('dot')
         G.node_attr['shape'] = 'none'
         G.node_attr['height'] = 0
@@ -131,8 +124,8 @@ class LL1Parser(object):
         G.node_attr['margin'] = 0
 
         G.draw('sample.png')
-        print(tree)
-        print(G.string())
+        # print(tree)
+        # print(G.string())
 
 
 
@@ -142,4 +135,4 @@ if __name__ == '__main__':
         ll1 = LL1Parser(sys.argv[1])
     else:
         ll1 = LL1Parser()
-    ll1.visualize_syntaxtree(['id'])
+    ll1.visualize_syntaxtree(['id', '+', 'id', '*', 'id'])
