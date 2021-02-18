@@ -66,7 +66,73 @@ class LL1Parser(object):
                         stack.append(desc_list[i])
                 pprint(list(reversed(stack)))
                 print(64*'-')
-        pprint(popped_stack)
+        return popped_stack[0]
+    
+    def visualize_syntaxtree(self, string):
+        import pygraphviz as pgv
+        tree = self.parse(string)
+        G = pgv.AGraph(directed=True)
+        node_id = 0
+        stack = [(tree, node_id)]
+        while stack:
+            top, node = stack.pop(0)
+            if str(node) not in G.nodes():
+                G.add_node(node_id, label=top.root)
+                node_id += 1
+            for desc in top.desc:
+                if desc.root == EPSILON:
+                   label = G.get_node(node).attr['label'] 
+                   label = '<' + label + ' = &#x3B5;>'
+                   G.get_node(node).attr['label'] = label
+                   break
+                G.add_node(node_id, label=desc.root)
+                G.add_edge(node, node_id)
+                stack.append((desc, node_id))
+                node_id += 1
+
+        # Perform a DFS to get proper order of terminals
+        terminals = self.grammar.terminals
+        terminal_nodes = []
+        stack = G.nodes()
+        visited = []
+        while stack:
+            node = stack.pop(-1)
+            if node not in visited:
+                visited.append(node)
+                if node.attr['label'] in terminals:
+                    terminal_nodes.append(node)
+                print(node.attr['label'])
+                stack.extend(G.successors(node))
+        t = G.add_subgraph(terminal_nodes, name='terminals')
+        t.graph_attr['rank'] = 'same'
+        for i in range(len(t.nodes())-1):
+            print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+                i, terminal_nodes[i], i+1, terminal_nodes[i+1]
+            ))
+            t.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
+        """
+        # How to get proper node order ?
+        c = []
+        for node_id in terminal_nodes:
+            c.append(G.get_node(node_id))
+        t = G.add_subgraph(c, name='terminals')
+        t.graph_attr['rank'] = 'same'
+
+        for i in range(len(t.nodes())-1):
+            print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+                i, t.nodes()[i], i+1, t.nodes()[i+1]
+            ))
+            t.add_edge(t.nodes()[i], t.nodes()[i+1])
+        """
+        G.layout('dot')
+        G.node_attr['shape'] = 'none'
+        G.node_attr['height'] = 0
+        G.node_attr['width'] = 0
+        G.node_attr['margin'] = 0
+
+        G.draw('sample.png')
+        print(tree)
+        print(G.string())
 
 
 
@@ -76,4 +142,4 @@ if __name__ == '__main__':
         ll1 = LL1Parser(sys.argv[1])
     else:
         ll1 = LL1Parser()
-    ll1.parse(['id'])
+    ll1.visualize_syntaxtree(['id'])
