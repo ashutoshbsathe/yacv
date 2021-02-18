@@ -94,7 +94,6 @@ class LL1Parser(object):
         # Create the parse tree
         tree = self.parse(string)
 
-        random.shuffle(COLORS)
         G = pgv.AGraph(name='AbstractSyntaxTree', directed=True)
         node_id = 0
         stack = [(tree, node_id)]
