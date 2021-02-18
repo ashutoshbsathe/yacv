@@ -9,6 +9,8 @@ ACCEPT = 'ACC'
 ERROR  = ''
 GOTO   = 'GOTO'
 DOT    = '•'
+REDUCE = 'r'
+SHIFT  = 's'
 
 class LRItem(object):
     def __init__(self, production=None, dot_pos=0, lookaheads=[]):
@@ -95,6 +97,7 @@ class LRAutomatonState(object):
 class LRParser(object):
     def __init__(self, fname='another-grammar.txt'):
         self.grammar = Grammar(fname)
+        self.is_valid = True
         self.automaton_states = []
         self.automaton_transitions = OrderedDict()
         self.automaton_built = False
@@ -107,6 +110,8 @@ class LRParser(object):
             columns = columns,
             index = self.automaton_transitions.keys()
         )
+        self.parsing_table.loc[:,:] = ERROR
+        self.parsing_table_built = False
         self.build_parsing_table()
 
     def closure(self, i):
@@ -215,6 +220,61 @@ class LRParser(object):
     def build_parsing_table(self):
         pass
 
+    def parse(self, string):
+        assert self.parsing_table_built
+        assert len(string) > 0
+        terminals = self.grammar.terminals
+        if string[-1] != '$':
+            string.append('$')
+        stack = [0]
+        while True:
+            top = stack[-1]
+            a = string[0]
+            entry = self.parsing_table.at[top, (ACTION, a)]
+            if isinstance(entry, list):
+                entry = entry[0]
+            print('stack top = {}, a = {}, entry = {}'.format(top, a, entry))
+            if entry[0] == 's':
+                stack.append(a)
+                stack.append(int(entry[1:]))
+                string.pop(0)
+            elif entry[0] == 'r':
+                prod_id =int(entry[1:])
+                prod = self.grammar.prods[prod_id]
+                num_pops = 0
+                for i in prod.rhs:
+                    if i in terminals:
+                        num_pops += 1
+                for _ in range(num_pops):
+                    if not stack:
+                        raise ValueError
+                    stack.pop(-1)
+                    if not stack:
+                        raise ValueError
+                    stack.pop(-1)
+                if not stack:
+                    raise ValueError
+                new_top = stack.pop(-1)
+                nonterm = prod.lhs
+                new_state = self.parsing_table.at[new_top, (GOTO, nonterm)]
+                if isinstance(new_state, list):
+                    new_state = int(new_state[0])
+                stack.append(new_state)
+                print(prod)
+            elif entry == ACCEPT:
+                print('Parse successful')
+                break
+            elif entry == ERROR:
+                print('Parsing Error')
+                break
+            else:
+                print('Unknown Error')
+                break
+            print(stack)
+            print(string)
+
+
+
     def visualize_automaton(self):
         import pygraphviz as pgv
         G = pgv.AGraph(rankdir='LR', directed=True)
@@ -259,6 +319,44 @@ class LR0Parser(LRParser):
         init = LRAutomatonState(self.closure(LRItem(self.grammar.prods[0], 0)))
         self.build_automaton_from_init(init)
 
+    def build_parsing_table(self):
+        # TODO: Silently return if parsing table is built ?
+        assert self.automaton_built
+        terminals = self.grammar.terminals
+        for state_id, transitions in self.automaton_transitions.items():
+            state = self.automaton_states[state_id]
+            if state.accept:
+                col = (ACTION, '$')
+                self.parsing_table.at[state_id, col] = ACCEPT
+            elif len(state.reduce_items) > 0:
+                for t in self.grammar.terminals:
+                    col = (ACTION, t)
+                    if self.parsing_table.at[state_id, col] == ERROR:
+                        self.parsing_table.at[state_id, col] = []
+                    for item in state.items:
+                        if item.reduce:
+                            prod_id = self.grammar.prods.index(item.production)
+                            entry = REDUCE + str(prod_id)
+                            self.parsing_table.at[state_id, col].append(entry)
+                            if len(self.parsing_table.at[state_id, col]) > 1:
+                                self.is_valid = False
+            for symbol, new_state_id in transitions.items():
+                if symbol in terminals:
+                    entry = SHIFT + str(new_state_id)
+                    col = (ACTION, symbol)
+                else:
+                    entry = str(new_state_id)
+                    col = (GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == ERROR:
+                    self.parsing_table.at[state_id, col] = []
+                self.parsing_table.at[state_id, col].append(entry)
+                if len(self.parsing_table.at[state_id, col]) > 1:
+                    self.is_valid = False
+
+        pprint(self.parsing_table)
+        print(self.is_valid)
+        self.parsing_table_built = True
+
 class LR1Parser(LRParser): 
     def build_automaton(self):
         if self.automaton_built:
@@ -272,26 +370,9 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         #lr0 = LR0Parser(sys.argv[1])
-        p = LR1Parser(sys.argv[1])
+        p = LR0Parser(sys.argv[1])
     else:
         #lr0 = LR0Parser()
-        p = LR1Parser()
+        p = LR0Parser()
+    p.parse(['a', 'a', 'a', 'b', 'b', 'b'])
     
-    ret = p.closure(
-        LRItem(
-            p.grammar.prods[0],
-            0,
-            # ['$']
-        )
-    )
-    pprint(ret)
-    """
-    for state in p.automaton_states:
-        print(state.__repr__())
-        print(64 *'-')
-    """
-    print(p.automaton_states[0] == p.automaton_states[-1])
-    for i, state in enumerate(p.automaton_states):
-        print('State {} = {}\n'.format(i, state) + 64*'-')
-    pprint(p.automaton_transitions)
-    p.visualize_automaton()
