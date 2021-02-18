@@ -1,4 +1,5 @@
 from grammar import Grammar, first, EPSILON
+from abstractsyntaxtree import AbstractSyntaxTree
 from pprint import pprint
 from copy import deepcopy
 from collections import OrderedDict
@@ -227,6 +228,7 @@ class LRParser(object):
         if string[-1] != '$':
             string.append('$')
         stack = [0]
+        curr_nonterminals = OrderedDict()
         while True:
             top = stack[-1]
             a = string[0]
@@ -241,10 +243,16 @@ class LRParser(object):
             elif entry[0] == 'r':
                 prod_id =int(entry[1:])
                 prod = self.grammar.prods[prod_id]
+                new_tree = AbstractSyntaxTree(prod)
+                new_tree.prod_id = prod_id
                 num_pops = 0
-                for i in prod.rhs:
-                    if i in terminals:
+                for i, symbol in enumerate(prod.rhs):
+                    if symbol in terminals:
                         num_pops += 1
+                    elif symbol != EPSILON:
+                        # i must be nonterminal
+                        new_tree.desc[i] = curr_nonterminals[symbol][0]
+                        curr_nonterminals[symbol].pop(0)
                 for _ in range(num_pops):
                     if not stack:
                         raise ValueError
@@ -261,8 +269,17 @@ class LRParser(object):
                     new_state = int(new_state[0])
                 stack.append(new_state)
                 print(prod)
+                if prod.lhs not in curr_nonterminals:
+                    curr_nonterminals[prod.lhs] = []
+                curr_nonterminals[prod.lhs].append(new_tree)
             elif entry == ACCEPT:
+                prod = self.grammar.prods[0]
+                assert prod.rhs[-1] == '$' and len(prod.rhs) == 2
+                tree = AbstractSyntaxTree(prod)
+                tree.desc[0] = curr_nonterminals[prod.rhs[0]]
                 print('Parse successful')
+                print('Final tree = {}'.format(tree))
+                return tree
                 break
             elif entry == ERROR:
                 print('Parsing Error')
@@ -272,8 +289,7 @@ class LRParser(object):
                 break
             print(stack)
             print(string)
-
-
+            print(curr_nonterminals)
 
     def visualize_automaton(self):
         import pygraphviz as pgv

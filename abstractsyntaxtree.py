@@ -11,7 +11,7 @@ class AbstractSyntaxTree(object):
                 self.root = args[0].lhs
                 desc = []
                 for symbol in args[0].rhs:
-                    desc.append(ParseTree(symbol))
+                    desc.append(AbstractSyntaxTree(symbol))
                 self.desc = desc
                 self.prod_id = None
             elif isinstance(args[0], str):
