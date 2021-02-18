@@ -277,6 +277,8 @@ class LRParser(object):
                         if not stack:
                             raise ValueError()
                         popped_list.append(stack.pop(-1)) # pops the symbol
+                else:
+                    new_tree.desc.append(AbstractSyntaxTree(EPSILON))
                 for i in range(len(popped_list)-1, -1, -1):
                     new_tree.desc.append(popped_list[i])
                 new_top = stack[-1]
