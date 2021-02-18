@@ -249,7 +249,6 @@ class LRParser(object):
         if string[-1] != '$':
             string.append('$')
         stack = [0]
-        last_popped = None
         while True:
             top = stack[-1]
             a = string[0]
@@ -269,24 +268,15 @@ class LRParser(object):
                 prod = self.grammar.prods[prod_id]
                 new_tree = AbstractSyntaxTree(prod.lhs)
                 new_tree.prod_id = prod_id
-                # the curr_nonterminals part is janky asf
-                # think if we can put the tree in the stack itself
-                """
-                for i, symbol in enumerate(prod.rhs):
-                    if symbol not in terminals and symbol != EPSILON:
-                        # i must be nonterminal
-                        new_tree.desc[i] = curr_nonterminals[symbol][0]
-                        curr_nonterminals[symbol].pop(0)
-                """
                 popped_list = []
-                for _ in range(len(prod.rhs)):
-                    if not stack:
-                        raise ValueError()
-                    stack.pop(-1) # pops the state number
-                    if not stack:
-                        raise ValueError()
-                    popped_list.append(stack.pop(-1)) # pops the symbol
-                last_popped = popped_list[-1]
+                if prod.rhs[0] != EPSILON:
+                    for _ in range(len(prod.rhs)):
+                        if not stack:
+                            raise ValueError()
+                        stack.pop(-1) # pops the state number
+                        if not stack:
+                            raise ValueError()
+                        popped_list.append(stack.pop(-1)) # pops the symbol
                 for i in range(len(popped_list)-1, -1, -1):
                     new_tree.desc.append(popped_list[i])
                 new_top = stack[-1]
@@ -539,10 +529,10 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         #lr0 = LR0Parser(sys.argv[1])
-        p = LR0Parser(sys.argv[1])
+        p = SLR1Parser(sys.argv[1])
     else:
         #lr0 = LR0Parser()
-        p = LR0Parser()
+        p = SLR1Parser()
     p.visualize_automaton()
-    p.visualize_syntaxtree(['c', 'd', 'd'])
+    p.visualize_syntaxtree(['b'])
     
