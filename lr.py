@@ -357,6 +357,47 @@ class LR0Parser(LRParser):
         print(self.is_valid)
         self.parsing_table_built = True
 
+class SLR1Parser(LR0Parser):
+    def build_parsing_table(self):
+        # TODO: Silently return if parsing table is built ?
+        assert self.automaton_built
+        terminals = self.grammar.terminals
+        for state_id, transitions in self.automaton_transitions.items():
+            state = self.automaton_states[state_id]
+            if state.accept:
+                col = (ACTION, '$')
+                self.parsing_table.at[state_id, col] = ACCEPT
+            elif len(state.reduce_items) > 0:
+                for item in state.items:
+                    if item.reduce:
+                        lhs = item.production.lhs
+                        follow = self.grammar.nonterminals[lhs]['follow']
+                        prod_id = self.grammar.prods.index(item.production)
+                        entry = REDUCE + str(prod_id)
+                        for symbol in follow:
+                            col = (ACTION, symbol)
+                            if self.parsing_table.at[state_id, col] == ERROR:
+                                self.parsing_table.at[state_id, col] = []
+                            self.parsing_table.at[state_id, col].append(entry)
+                            if len(self.parsing_table.at[state_id, col]) > 1:
+                                self.is_valid = False
+            for symbol, new_state_id in transitions.items():
+                if symbol in terminals:
+                    entry = SHIFT + str(new_state_id)
+                    col = (ACTION, symbol)
+                else:
+                    entry = str(new_state_id)
+                    col = (GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == ERROR:
+                    self.parsing_table.at[state_id, col] = []
+                self.parsing_table.at[state_id, col].append(entry)
+                if len(self.parsing_table.at[state_id, col]) > 1:
+                    self.is_valid = False
+
+        pprint(self.parsing_table)
+        print(self.is_valid)
+        self.parsing_table_built = True
+
 class LR1Parser(LRParser): 
     def build_automaton(self):
         if self.automaton_built:
@@ -370,9 +411,9 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         #lr0 = LR0Parser(sys.argv[1])
-        p = LR0Parser(sys.argv[1])
+        p = SLR1Parser(sys.argv[1])
     else:
         #lr0 = LR0Parser()
-        p = LR0Parser()
+        p = SLR1Parser()
     p.parse(['a', 'a', 'a', 'b', 'b', 'b'])
     
