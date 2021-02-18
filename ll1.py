@@ -114,17 +114,6 @@ class LL1Parser(object):
                 # stack.extend(G.successors(node))
         print(terminal_nodes)
 
-        invis_nodes = []
-        for t in terminal_nodes:
-            for e in G.predecessors(t):
-                print(e)
-                G.add_node(node_id, style='invis', margin=0)
-                G.add_edge(e, node_id, headclip=False)
-                G.add_edge(node_id, t, tailclip=False)
-                G.remove_edge(e, t)
-                invis_nodes.append(G.get_node(node_id))
-                node_id += 1       
-
         for i, prod in enumerate(prods):
             nonterminals = []
             print(i, prod)
@@ -143,14 +132,6 @@ class LL1Parser(object):
                 nt.add_edge(nonterminals[j], nonterminals[j+1], \
                         style='invis', weight=INFINITY)
         
-        inv = G.add_subgraph(invis_nodes, name='Invisible Nodes')
-        inv.graph_attr['rank'] = 'same'
-        for i in range(len(inv.nodes())-1):
-            print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
-                i, invis_nodes[i], i+1, invis_nodes[i+1]
-            ))
-            inv.add_edge(invis_nodes[i], invis_nodes[i+1], style='invis')
-
         t = G.add_subgraph(terminal_nodes, name='Terminals')
         t.graph_attr['rank'] = 'max'
         for i in range(len(t.nodes())-1):
