@@ -1,7 +1,7 @@
 from grammar import Grammar, first, EPSILON
 import pandas as pd
 from pprint import pprint
-from parsetree import ParseTree
+from abstractsyntaxtree import AbstractSyntaxTree
 
 ERROR = ''
 ACCEPT = 'ACC'
@@ -40,7 +40,7 @@ class LL1Parser(object):
         if string[-1] != '$':
             string.append('$')
         # stack = ['S\'']
-        stack = [ParseTree('S\'')]
+        stack = [AbstractSyntaxTree('S\'')]
         popped_stack = []
         while stack[-1].root != '$':
             # Don't assign, destroys the tree ref
@@ -57,7 +57,7 @@ class LL1Parser(object):
                 print(prod)
                 desc_list = []
                 for symbol in prod.rhs:
-                    x = ParseTree(symbol)
+                    x = AbstractSyntaxTree(symbol)
                     stack[-1].desc.append(x)
                     desc_list.append(x)
                 popped_stack.append(stack.pop(-1))

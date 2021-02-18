@@ -1,6 +1,6 @@
 from grammar import Production, EPSILON
 
-class ParseTree(object):
+class AbstractSyntaxTree(object):
     def __init__(self, *args):
         if len(args) == 0:
             self.root = None
