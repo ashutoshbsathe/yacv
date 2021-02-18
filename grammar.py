@@ -174,7 +174,11 @@ class Grammar(object):
                         self.nonterminals[symbol]['follow'] = s3
                         print('Production {} has nullable symbol {} at the end, updated FOLLOW({}) = {}'.format(prod, symbol, symbol, s3))
                     print('Production {} has nullable symbol {}, changed FOLLOW({}) to {}'.format(prod, symbol, reversed_rhs[i+1], s1))
-                
+            if rhs[-1] in self.nonterminals.keys():
+                self.nonterminals[rhs[-1]]['follow'] = \
+                        self.nonterminals[rhs[-1]]['follow'].union(
+                            self.nonterminals[lhs]['follow']
+                        )
             print(64*'-')
 
 

@@ -536,5 +536,5 @@ if __name__ == '__main__':
         #lr0 = LR0Parser()
         p = SLR1Parser()
     p.visualize_automaton()
-    p.visualize_syntaxtree(['b'])
+    p.visualize_syntaxtree(['id', '+', 'id', '*', 'id'])
     
