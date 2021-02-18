@@ -5,6 +5,7 @@ from abstractsyntaxtree import AbstractSyntaxTree
 
 ERROR = ''
 ACCEPT = 'ACC'
+INFINITY = 2048
 class LL1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
         self.grammar = Grammar(fname)
@@ -76,11 +77,14 @@ class LL1Parser(object):
         G = pgv.AGraph(name='AbstractSyntaxTree', directed=True)
         node_id = 0
         stack = [(tree, node_id)]
+        terminals = self.grammar.terminals
+        prods = []
         while stack:
             top, node = stack.pop(0)
             if str(node) not in G.nodes():
                 G.add_node(node_id, label=top.root)
                 node_id += 1
+            desc_ids = []
             for desc in top.desc:
                 if desc.root == EPSILON:
                    label = G.get_node(node).attr['label'] 
@@ -89,11 +93,12 @@ class LL1Parser(object):
                    break
                 G.add_node(node_id, label=desc.root)
                 G.add_edge(node, node_id)
+                desc_ids.append(node_id)
                 stack.append((desc, node_id))
                 node_id += 1
+            prods.append(desc_ids)
 
         # Perform a DFS to get proper order of terminals
-        terminals = self.grammar.terminals
         terminal_nodes = []
         stack = [G.nodes()[0]]
         visited = []
@@ -108,20 +113,60 @@ class LL1Parser(object):
                     stack.append(G.successors(node)[i])
                 # stack.extend(G.successors(node))
         print(terminal_nodes)
+
+        invis_nodes = []
+        for t in terminal_nodes:
+            for e in G.predecessors(t):
+                print(e)
+                G.add_node(node_id, style='invis', margin=0)
+                G.add_edge(e, node_id, headclip=False)
+                G.add_edge(node_id, t, tailclip=False)
+                G.remove_edge(e, t)
+                invis_nodes.append(G.get_node(node_id))
+                node_id += 1       
+
+        for i, prod in enumerate(prods):
+            nonterminals = []
+            print(i, prod)
+            for node_id in prod:
+                if G.get_node(node_id).attr['label'] in terminals:
+                    continue
+                nonterminals.append(G.get_node(node_id))
+            if len(nonterminals) <= 1:
+                continue
+            nt = G.subgraph(nonterminals, name='Production' + str(i))
+            nt.graph_attr['rank'] = 'same'
+            for j in range(len(nt.nodes())-1):
+                print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+                    j, nonterminals[j], j+1, nonterminals[j+1]
+                ))
+                nt.add_edge(nonterminals[j], nonterminals[j+1], \
+                        style='invis', weight=INFINITY)
         
+        inv = G.add_subgraph(invis_nodes, name='Invisible Nodes')
+        inv.graph_attr['rank'] = 'same'
+        for i in range(len(inv.nodes())-1):
+            print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+                i, invis_nodes[i], i+1, invis_nodes[i+1]
+            ))
+            inv.add_edge(invis_nodes[i], invis_nodes[i+1], style='invis')
+
         t = G.add_subgraph(terminal_nodes, name='Terminals')
-        t.graph_attr['rank'] = 'same'
+        t.graph_attr['rank'] = 'max'
         for i in range(len(t.nodes())-1):
             print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
                 i, terminal_nodes[i], i+1, terminal_nodes[i+1]
             ))
             t.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
         
-        G.layout('dot')
+
+        G.edge_attr['dir'] = 'none'
+        G.node_attr['ordering'] = 'out'
         G.node_attr['shape'] = 'none'
         G.node_attr['height'] = 0
         G.node_attr['width'] = 0
-        G.node_attr['margin'] = 0
+        G.node_attr['margin'] = 0.1
+        G.layout('dot')
 
         G.draw('sample.png')
         # print(tree)
@@ -135,4 +180,4 @@ if __name__ == '__main__':
         ll1 = LL1Parser(sys.argv[1])
     else:
         ll1 = LL1Parser()
-    ll1.visualize_syntaxtree(['id', '+', 'id', '*', 'id'])
+    ll1.visualize_syntaxtree(['id', '+', 'id', '*', '(', 'id', '+', 'id', '*', 'id', ')'])
