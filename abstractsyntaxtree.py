@@ -1,5 +1,5 @@
 from grammar import Production, EPSILON
-
+from pprint import pformat
 class AbstractSyntaxTree(object):
     def __init__(self, *args):
         if len(args) == 0:
@@ -20,7 +20,7 @@ class AbstractSyntaxTree(object):
                 self.prod_id = None
 
     def __str__(self):
-        return '[root = {}, desc = {}]'.format(self.root, self.desc)
+        return '{}->{}'.format(self.root, pformat(self.desc))
 
     def __repr__(self):
-        return 'ParseTree object ' + str(self) + ' at {}'.format(hex(id(self)))
+        return str(self)
