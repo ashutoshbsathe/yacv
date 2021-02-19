@@ -165,6 +165,8 @@ class Grammar(object):
                 if symbol not in self.nonterminals.keys():
                     break
                 if self.nonterminals[symbol]['nullable'] and (i+1) < len(rhs):
+                    if reversed_rhs[i+1] in self.terminals:
+                        continue
                     s1 = self.nonterminals[reversed_rhs[i+1]]['follow']
                     s2 = self.nonterminals[lhs]['follow']
                     s1 = s1.union(s2)

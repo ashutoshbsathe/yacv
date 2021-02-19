@@ -573,14 +573,16 @@ class LR1Parser(LRParser):
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 2:
         #lr0 = LR0Parser(sys.argv[1])
         p = LR1Parser(sys.argv[1])
+        string = sys.argv[2]
     else:
         #lr0 = LR0Parser()
         p = LR1Parser()
+        string = sys.argv[1]
     p.visualize_automaton()
-    string = 'id + id * ( id / id - id )'
+    # string = 'id + id * ( id / id / id * id ) - id'
     string = [x.strip() for x in string.split(' ')]
     pprint(p.grammar.nonterminals)
     p.visualize_syntaxtree(string)
