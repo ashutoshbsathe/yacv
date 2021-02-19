@@ -394,6 +394,7 @@ class LRParser(object):
         G.layout('dot')
 
         G.draw('sample.png')
+        G.draw('sample.svg')
 
     def visualize_automaton(self):
         import pygraphviz as pgv

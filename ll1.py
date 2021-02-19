@@ -175,6 +175,7 @@ class LL1Parser(object):
         G.layout('dot')
 
         G.draw('sample.png')
+        G.draw('sample.svg')
         # print(tree)
         # print(G.string())
 
@@ -186,4 +187,6 @@ if __name__ == '__main__':
         ll1 = LL1Parser(sys.argv[1])
     else:
         ll1 = LL1Parser()
-    ll1.visualize_syntaxtree(['(', 'id', ')', '*', '(', 'id', '+', 'id', ')'])
+    string = 'id + id * id / id - ( id )'
+    string = [x.strip() for x in string.split(' ')]
+    ll1.visualize_syntaxtree(string)

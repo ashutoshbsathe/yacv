@@ -1,0 +1,7 @@
+DECL -> TYPE LIST ;
+TYPE -> int
+TYPE -> char
+TYPE -> float
+TYPE -> double
+LIST -> LIST , id
+LIST -> id
