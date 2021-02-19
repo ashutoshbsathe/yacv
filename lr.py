@@ -158,9 +158,9 @@ class LRParser(object):
                 if item.lookaheads:
                     f = first(self.grammar, 
                             item.production.rhs[item.dot_pos+1:])
-                    if EPSILON not in f:
-                        f = f.union(set(item.lookaheads).difference(['$']))
-                    else:
+                    if not f or EPSILON in f:
+                        # f = f.union(set(item.lookaheads).difference(['$']))
+                        # else:
                         f = f.union(set(item.lookaheads))
                     f = f.difference([EPSILON])
                 else:
@@ -255,7 +255,7 @@ class LRParser(object):
             entry = self.parsing_table.at[top, (ACTION, a)]
             if entry == ERROR:
                 print('Parse error')
-                raise ValueError()
+                raise ValueError('ERROR entry for top = {}, a = {}'.format(top, a))
             if isinstance(entry, list):
                 entry = entry[0]
             print('stack top = {}, a = {}, entry = {}'.format(top, a, entry))
@@ -526,15 +526,62 @@ class LR1Parser(LRParser):
         init = LRAutomatonState(self.closure(LRItem(
             self.grammar.prods[0], 0, ['$'])))
         self.build_automaton_from_init(init)
+        self.automaton_built = True
+
+    def build_parsing_table(self):
+        # TODO: Silently return if parsing table is built ?
+        assert self.automaton_built
+        terminals = self.grammar.terminals
+        for state_id, transitions in self.automaton_transitions.items():
+            state = self.automaton_states[state_id]
+            if len(state.reduce_items) > 0:
+                # This is kinda dumb, why am I not using reduce_items directly ?
+                # TODO: Fix this
+                for item in state.items:
+                    if item.reduce:
+                        prod = item.production
+                        prod_id = self.grammar.prods.index(prod)
+                        if prod_id == 0:
+                            col = (ACTION, '$')
+                            self.parsing_table.at[state_id, col] = ACCEPT
+                            continue
+                        lookaheads = item.lookaheads
+                        entry = 'r' + str(prod_id)
+                        for symbol in item.lookaheads:
+                            col = (ACTION, symbol)
+                            if self.parsing_table.at[state_id, col] == ERROR:
+                                self.parsing_table.at[state_id, col] = []
+                            self.parsing_table.at[state_id, col].append(entry)
+                            if len(self.parsing_table.at[state_id, col]) > 1:
+                                self.is_valid = False
+            for symbol, new_state_id in transitions.items():
+                if symbol in terminals:
+                    entry = 's' + str(new_state_id)
+                    col = (ACTION, symbol)
+                else:
+                    entry = str(new_state_id)
+                    col = (GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == ERROR:
+                    self.parsing_table.at[state_id, col] = []
+                self.parsing_table.at[state_id, col].append(entry)
+                if len(self.parsing_table.at[state_id, col]) > 1:
+                    self.is_valid = False
+        pprint(self.parsing_table)
+        print(self.is_valid)
+        self.parsing_table_built = True
+        self.parsing_table.to_csv('parsing_table.csv')
 
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         #lr0 = LR0Parser(sys.argv[1])
-        p = SLR1Parser(sys.argv[1])
+        p = LR1Parser(sys.argv[1])
     else:
         #lr0 = LR0Parser()
-        p = SLR1Parser()
+        p = LR1Parser()
     p.visualize_automaton()
-    p.visualize_syntaxtree(['id', '+', 'id', '*', 'id'])
+    string = 'id + id * ( id / id - id )'
+    string = [x.strip() for x in string.split(' ')]
+    pprint(p.grammar.nonterminals)
+    p.visualize_syntaxtree(string)
     

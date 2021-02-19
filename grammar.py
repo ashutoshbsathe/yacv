@@ -46,7 +46,7 @@ def first(g, s):
     # g: Grammar object
     # s: RHS or Part of RHS as list
     if not s:
-        return set([EPSILON]) # set with epsilon in it
+        return set() # empty set
     if s[0] == EPSILON:
         return set([EPSILON]) # set with epsilon in it
     if s[0] not in g.nonterminals.keys():
@@ -148,9 +148,10 @@ class Grammar(object):
                     first(self, self.prods[prodno].rhs[idx+1:]), 
                     nt
                 ))
-                s = s.union(first(self, self.prods[prodno].rhs[idx+1:]))
-                if EPSILON in s:
-                    s.add('$')
+                f = first(self, self.prods[prodno].rhs[idx+1:])
+                if not f or EPSILON in f:
+                    f.add('$')
+                s = s.union(f)
                 s = s.difference(set([EPSILON]))
             self.nonterminals[nt]['follow'] = s
             print('FOLLOW({}) = {}'.format(nt, s))

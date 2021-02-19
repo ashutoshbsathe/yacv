@@ -1,6 +1,7 @@
 # Ignore the sample graph visualizations
 sample.png
 sample.dot
+parsing_table.csv
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/python
