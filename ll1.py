@@ -93,7 +93,8 @@ class LL1Parser(object):
         import pygraphviz as pgv
         # Create the parse tree
         tree = self.parse(string)
-
+        if tree.root == 'S\'':
+            tree = tree.desc[0]
         G = pgv.AGraph(name='AbstractSyntaxTree', directed=True)
         node_id = 0
         stack = [(tree, node_id)]
