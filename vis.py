@@ -7,7 +7,7 @@ from ll1 import LL1Parser
 from lr import LR0Parser, LR1Parser, SLR1Parser
 
 GRAMMAR = 'll1-expression-grammar.txt'
-STRING = 'id + id * ( id / id / id ) - id'
+STRING = 'id + id * id / id - ( id )'
 Parser = LR1Parser
 bounding_box = None
 new_bbox = None
@@ -144,7 +144,7 @@ class ParseTree(Scene):
         global bounding_box
         grid = ScreenGrid()
         p = Parser(GRAMMAR)
-        st = [x.strip() for x in STRING.split(' ')]
+        st = [x.strip() for x in STRING.split(' ') if x]
         g = p.visualize_syntaxtree(st)
         x, y, l, w = g.graph_attr['bb'].split(',')
         bounding_box = [float(x), float(y), float(l), float(w)]
