@@ -5,12 +5,16 @@ import sys
 sys.path.append('/home/ashutosh/parser-vis')
 from ll1 import LL1Parser
 from lr import LR0Parser, LR1Parser, SLR1Parser
+
 GRAMMAR = 'll1-expression-grammar.txt'
 STRING = 'id + id * ( id / id / id ) - id'
 Parser = LR1Parser
 bounding_box = None
 new_bbox = None
 
+# This is required because graphviz puts the actual pixel measurements in 
+# the output file. This is incompatible with manim's standard 14x8 grid
+# This function lets us "center" the graphviz plot onto the manim's grid
 def gridify(x, y):
     global bounding_box, new_bbox, scale_x, scale_y
     assert bounding_box is not None and len(bounding_box) == 4
@@ -134,6 +138,7 @@ def bezier_point(control_points, t):
     return bezier_point([
         (1 - t) * p1 + t * p2 for p1, p2 in control_linestring
     ], t)
+
 class ParseTree(Scene):
     def construct(self):
         global bounding_box
@@ -150,11 +155,15 @@ class ParseTree(Scene):
                 continue
             points = [np.asarray(gridify(*x.split(','))) \
                     for x in e.attr['pos'].split(' ')]
+            # By default, graphviz with "dot" engine will use the "pos" attribute
+            # for drawing the SVG path wutg orioer SVG path commands
+            # Manim cannot just draw a curve through these points because these
+            # points are equivalent to Bazier control points for that path
+            # So default functions like `set_points_as_corner` or `_smoothly`
+            # will NOT work out of box
+            # I found an implementation of bezier in manim too, but I'm too dumb
+            # to make it work so I kanged one off the internet
             bezier_pts = bezier_curve(points)
-            # points = [
-            #     coord(*gridify(*x.split(','))) for x in 
-            #     e.attr['pos'].split(' ')
-            # ]
             bezier_pts = [coord(*x) for x in bezier_pts]
             path = VMobject()
             path.set_points_smoothly(bezier_pts)
@@ -169,5 +178,4 @@ class ParseTree(Scene):
             dot.move_to(x*RIGHT + y*UP)
             dot.scale(0.5)
             self.add(dot)
-
 
