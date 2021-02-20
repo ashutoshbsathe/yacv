@@ -8,7 +8,7 @@ from lr import LR0Parser, LR1Parser, SLR1Parser
 
 GRAMMAR = 'll1-expression-grammar.txt'
 STRING = 'id + id * id / id - ( id )'
-Parser = LR1Parser
+Parser = LL1Parser
 bounding_box = None
 new_bbox = None
 
@@ -171,11 +171,12 @@ class ParseTree(Scene):
             self.add(path)
         for n in g.nodes():
             label = n.attr['label'].replace('&#x3B5;', '\epsilon')
-            dot = Tex(label, color=n.attr['color'])
+            dot = Tex('{{'+label+'}}')
             x, y = n.attr['pos'].split(',')
             x, y = gridify(x, y)
             print('Adding {}, at ({},{})'.format(label, x, y))
             dot.move_to(x*RIGHT + y*UP)
+            dot.set_color_by_tex(label, n.attr['color'])
             dot.scale(0.5)
             self.add(dot)
 
