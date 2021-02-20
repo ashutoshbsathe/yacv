@@ -176,6 +176,7 @@ class LL1Parser(object):
 
         G.draw('sample.png')
         G.draw('sample.svg')
+        return G
         # print(tree)
         # print(G.string())
 
