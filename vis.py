@@ -169,6 +169,7 @@ class ParseTree(Scene):
             path.set_points_smoothly(bezier_pts)
             path.set_color(e.attr['color'])
             self.add(path)
+            # self.play(ShowCreation(path))
         for n in g.nodes():
             label = n.attr['label'].replace('&#x3B5;', '\epsilon')
             dot = Tex('{{'+label+'}}')
@@ -176,7 +177,9 @@ class ParseTree(Scene):
             x, y = gridify(x, y)
             print('Adding {}, at ({},{})'.format(label, x, y))
             dot.move_to(x*RIGHT + y*UP)
-            dot.set_color_by_tex(label, n.attr['color'])
+            if n.attr['fontcolor']:
+                dot.set_color_by_tex(label, n.attr['fontcolor'])
             dot.scale(0.5)
             self.add(dot)
+            # self.play(ShowCreation(dot))
 

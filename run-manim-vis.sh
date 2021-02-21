@@ -1,3 +1,3 @@
 #!/bin/sh
 
-manimgl vis.py ParseTree -so
+manimgl vis.py ParseTree -los
