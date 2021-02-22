@@ -394,6 +394,7 @@ class LRParser(object):
 
         G.draw('sample.png')
         G.draw('sample.svg')
+        G.draw('sample.dot')
 
         return G
 
