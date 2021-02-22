@@ -4,8 +4,8 @@ import numpy as np
 import sys
 sys.path.append('/home/ashutosh/parser-vis')
 from grammar import EPSILON
-from ll1 import LL1Parser
-from lr import LR0Parser, LR1Parser, SLR1Parser
+from ll1 import *
+from lr import *
 from abstractsyntaxtree import AbstractSyntaxTree
 COLORS = [
     '#FF7F50', # 'coral',
@@ -27,7 +27,7 @@ COLORS = [
 ]
 INFINITY = 2048
 GRAMMAR = 'expression-grammar.txt'
-STRING = 'id + id * id / id - ( id )'
+STRING = 'id + id * id / id - ( id + id )'
 class GraphvizGraph(VGroup):
     def __init__(self, graph, **kwargs):
         digest_config(self, kwargs, locals())
@@ -38,6 +38,8 @@ class GraphvizGraph(VGroup):
         self.graph = graph
         x, y, l, w = self.graph.graph_attr['bb'].split(',')
         self.bounding_box = [float(x), float(y), float(l), float(w)]
+        self.nodes = {}
+        self.edges = {}
         self.graph_added = False
         self.add_graph()
 
@@ -106,6 +108,8 @@ class GraphvizGraph(VGroup):
             path.set_points_smoothly(bezier_pts)
             path.set_color(e.attr['color'])
             self.add(path)
+            key = '(' + str(e[0]) + ',' + str(e[1]) + ')'
+            self.edges[key] = path
         for n in g.nodes():
             label = n.attr['label'].replace('&#x3B5;', '\epsilon')
             print(label)
@@ -115,7 +119,37 @@ class GraphvizGraph(VGroup):
             dot.move_to(x*RIGHT + y*UP)
             dot.scale(0.5)
             self.add(dot)
+            self.nodes[str(n)] = dot
         self.graph_added = True
+
+def transform_graphviz_graphs(old, new):
+    common_nodes = set(old.nodes.keys()).intersection(set(new.nodes.keys()))
+    common_edges = set(old.edges.keys()).intersection(set(new.edges.keys()))
+    
+    anims = []
+    for n in list(common_nodes):
+        anims.append(Transform(old.nodes[n], new.nodes[n]))
+
+    for e in list(common_edges):
+        anims.append(Transform(old.edges[e], new.edges[e]))
+
+    old_nodes = set(old.nodes.keys()).difference(common_nodes)
+    old_edges = set(old.edges.keys()).difference(common_edges)
+    for n in list(old_nodes):
+        anims.append(FadeOut(old.nodes[n]))
+
+    for e in list(old_edges):
+        anims.append(FadeOut(old.edges[e]))
+
+    new_nodes = set(new.nodes.keys()).difference(common_nodes)
+    new_edges = set(new.edges.keys()).difference(common_edges)
+    for n in list(new_nodes):
+        anims.append(ShowCreation(new.nodes[n]))
+
+    for e in list(new_edges):
+        anims.append(ShowCreation(new.edges[e]))
+
+    return anims
 
 def ast_to_graphviz(ast, g, init_node=0):
     node_id = init_node
@@ -174,134 +208,183 @@ def ast_to_graphviz(ast, g, init_node=0):
         nt = G.subgraph(nonterminals, name='Production{}AST{}'.format(i, init_node))
         nt.graph_attr['rank'] = 'same'
         for j in range(len(nt.nodes())-1):
-            nt.add_edge(nonterminals[j], nonterminals[j+1], style='invis', \
+            nt.add_edge(nonterminals[j], nonterminals[j+1], style='dashed', color='#000000',\
                     weight=INFINITY)
+    """
     # Finally, add the terminal subgraphs
     t = G.add_subgraph(terminal_nodes, name='Terminals{}'.format(init_node))
     t.graph_attr['rank'] = 'max'
     for i in range(len(t.nodes())-1):
         t.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
+    """
 
-    return G
+    return G, terminal_nodes
 
 def lr_stack_to_graphviz(stack, grammar):
     prod_subgraphs = []
-    terminal_subgraphs = []
-    forbidden_edges = []
+    terminal_nodes = []
+    root_nodes = []
     node_id = 0
-    G = pgv.AGraph()
+    ret = pgv.AGraph(directed=True)
     for item in stack:
         if not isinstance(item, AbstractSyntaxTree):
             continue
-        g = ast_to_graphviz(item, grammar, node_id)
+        root_nodes.append(node_id)
+        g, t_nodes = ast_to_graphviz(item, grammar, node_id)
         node_id += len(g.nodes())
+        terminal_nodes.extend(t_nodes)
+        # Add all the nodes and edges from `g` to `ret`
         for n in g.nodes():
-            G.add_node(n)
+            ret.add_node(n)
             for k in n.attr.keys():
-                G.get_node(n).attr[k] = n.attr[k]
-        for graph in g.subgraphs():
-            if graph.name.startswith('Terminals'):
-                terminal_subgraphs.append(graph)
-                forbidden_edges.extend(graph.edges())
-            elif graph.name.startswith('Production'):
-                prod_subgraphs.append(graph)
-                forbidden_edges.extend(graph.edges())
-
+                ret.get_node(n).attr[k] = n.attr[k]
         for e in g.edges():
-            if e in forbidden_edges:
-                continue
-            G.add_edge(e)
-            print(e[0], e[1])
+            ret.add_edge(e)
             for k in e.attr.keys():
                 print(k, e.attr[k])
-                G.get_edge(e[0], e[1]).attr[k] = e.attr[k]
+                ret.get_edge(e[0], e[1]).attr[k] = e.attr[k]
+        for graph in g.subgraphs():
+            prod = ret.add_subgraph(graph.nodes(), name=graph.name)
+            prod.graph_attr['rank'] = 'same'
+            # I assume we don't need to add extra edges here
+            # because I believe the subgraph edges too, are already added
+            # OR maybe we just add subgraph first and then the remaining
+            # graph ?
+            for e in graph.edges():
+                prod.add_edge(e[0], e[1], style='invis', weight=INFINITY)
 
-    terminal_nodes = []
-    for i in range(0, len(terminal_subgraphs)-1):
-        # Add the i'th subgraph edges and then add the new one
-        print('At graph {}'.format(i))
-        tsub = terminal_subgraphs[i]
-        print(tsub.nodes(), tsub.edges())
-        for n in tsub.nodes():
-            terminal_nodes.append(n)
-            if n not in G.nodes():
-                G.add_node(n)
-        G.add_edges_from(tsub.edges())
-        last_node = None
-        visited = []
-        """
-        for n in tsub.nodes():
-            print(n)
-            
-            if len(tsub.successors(n)) == 0:
-                last_node = n
-                break
-            else:
-                print(tsub.successors(n))
-        """
-        for e in tsub.edges():
-            visited.append(str(e[0]))
-        print(visited)
-        total = set([str(x) for x in tsub.nodes()])
-        last_node = list(total.difference(set(visited)))[0]
-        print(last_node)
-        next_tsub = terminal_subgraphs[i+1]
-        first_node = None
-        visited = []
-        """
-        for n in next_tsub.nodes():
-            print(n)
-            if len(tsub.predecessors(n)) == 0:
-                first_node = n
-                break
-            else:
-                print(tsub.predecessors(n))
-        """
-        for e in next_tsub.edges():
-            visited.append(str(e[1]))
-        total = set([str(x) for x in next_tsub.nodes()])
-        first_node = list(total.difference(set(visited)))[0]
-        print(first_node)
-        print(last_node, first_node)
-        if last_node is not None and first_node is not None:
-            if first_node not in G.nodes():
-                G.add_node(first_node)
-            G.add_edge(last_node, first_node)
-        exit(0)
-    last_graph = terminal_subgraphs[-1]
-    terminal_nodes.extend(last_graph.nodes())
-    G.add_edges_from(last_graph.edges(), style='invis', weight=INFINITY)
-
-    t = G.add_subgraph(terminal_nodes, name='Terminals')
-    t.graph_attr['rank'] = 'max'
-    # Start thinking about productions now
-    for i, prod in enumerate(prod_subgraphs):
-        nt = G.add_subgraph(prod.nodes(), name='Production{}'.format(i))
-        nt.graph_attr['rank'] = 'same'
-        nt.add_edges_from(prod.edges())
-    print('Reached before dotting')
-    G.layout('dot')
-    G.draw('output.png')
+    # Also make a subgraph of roots so that their order is preserved
+    for i in range(len(root_nodes)):
+        for j in range(len(root_nodes)):
+            ret.add_edge(root_nodes[i], root_nodes[j], style='invis')
+        
+    # Finally, all the things are done
+    # now let's add the terminals
+    term = ret.add_subgraph(terminal_nodes, name='Terminals')
+    term.graph_attr['rank'] = 'sink'
+    for i in range(len(term.nodes()) - 1):
+        term.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
+   
+    ret.edge_attr['dir'] = 'none'
+    ret.node_attr['ordering'] = 'out'
+    ret.node_attr['shape'] = 'none'
+    ret.node_attr['height'] = 0
+    ret.node_attr['width'] = 0
+    ret.node_attr['margin'] = 0.1
+    print(ret.string())
+    ret.layout('dot')
+    ret.draw('output.png')
     print('Returning G')
-    return G
+    return ret
 
 
 class AnimateGraphs(Scene):
     def construct(self):
-        g1 = pgv.AGraph('graph1.dot')
+        """
+        g = LR1Parser(GRAMMAR)
+        st1 = AbstractSyntaxTree(g.grammar.prods[10])
+        st1.prod_id = 10
+        st2 = AbstractSyntaxTree('+')
+        st3 = AbstractSyntaxTree(g.grammar.prods[10])
+        st3.prod_id = 10
+        st4 = AbstractSyntaxTree(g.grammar.prods[6])
+        st4.prod_id = 6
+        st4.desc[1] = AbstractSyntaxTree(g.grammar.prods[10])
+        st4.desc[1].prod_id = 10
+        st4.desc[2] = AbstractSyntaxTree(g.grammar.prods[8])
+        st4.desc[2].prod_id = 8
+
+        print(st1)
+        print(st2)
+        print(st3)
+        print(st4)
+
+        stack = [st1, st2, st4, st3, st4, st4]
+        mobj = GraphvizGraph(lr_stack_to_graphviz(stack, g.grammar))
+        self.add(mobj)
+        """
+        g = LR1Parser(GRAMMAR)
+        string = [x.strip() for x in STRING.split(' ')]
+        if string[-1] != '$':
+            string.append('$')
+        stack = [0]
+        prev_mobject = None
+        curr_mobject = None
+        while True:
+            top = stack[-1]
+            a = string[0]
+            entry = g.parsing_table.at[top, (ACTION, a)]
+            if entry == ERROR:
+                print('Parse error')
+                raise ValueError('ERROR entry for top = {}, a = {}'.format(top, a))
+            if isinstance(entry, list):
+                # TODO: maybe allow preference in case of SR conflict ?
+                entry = entry[0]
+            if entry[0] == 's':
+                stack.append(AbstractSyntaxTree(a))
+                stack.append(int(entry[1:]))
+                string.pop(0)
+            elif entry[0] == 'r':
+                prod_id = int(entry[1:])
+                prod = g.grammar.prods[prod_id]
+                new_tree = AbstractSyntaxTree(prod.lhs)
+                new_tree.prod_id = prod_id
+                # I'm getting the popped list and then traversing it in
+                # reverse fashion again
+                # TODO: can this be optimized ?
+                popped_list = []
+                if prod.rhs[0] != EPSILON:
+                    for _ in range(len(prod.rhs)):
+                        if not stack:
+                            raise ValueError()
+                        stack.pop(-1)
+                        if not stack:
+                            raise ValueError()
+                        popped_list.append(stack.pop(-1))
+                else:
+                    new_tree.desc.append(AbstractSyntaxTree(EPSILON))
+                for i in range(len(popped_list)-1, -1, -1):
+                    new_tree.desc.append(popped_list[i])
+                new_top = stack[-1]
+                nonterminal = prod.lhs
+                new_state = g.parsing_table.at[new_top, (GOTO, nonterminal)]
+                stack.append(new_tree)
+                if isinstance(new_state, list):
+                    new_state = new_state[0]
+                stack.append(int(new_state))
+            elif entry == ACCEPT:
+                prod = g.grammar.prods[0]
+                assert prod.rhs[-1] == '$' and len(prod.rhs) == 2
+                # parse successful
+                curr_mobject = GraphvizGraph(lr_stack_to_graphviz(stack, g.grammar))
+                self.play(*transform_graphviz_graphs(prev_mobject, curr_mobject))
+                break
+            else:
+                raise ValueError('Unknown Error')
+                break
+            curr_mobject = GraphvizGraph(lr_stack_to_graphviz(stack, g.grammar))
+            if prev_mobject is not None:
+                self.play(*transform_graphviz_graphs(prev_mobject, curr_mobject))
+                self.remove(prev_mobject)
+            else:
+                self.add(curr_mobject)
+            prev_mobject = curr_mobject
+
+        return
+        g1 = pgv.AGraph('expr1.dot')
         # calling the layout function is important
         g1.layout('dot')
-        print(g1.string())
-        g2 = pgv.AGraph('graph2.dot')
+        #print(g1.string())
+        g2 = pgv.AGraph('expr2.dot')
         # calling the layout function is important
         g2.layout('dot')
         
         mobj_g1 = GraphvizGraph(g1)
         mobj_g2 = GraphvizGraph(g2)
-        """
         self.add(mobj_g1)
         self.wait(1)
-        self.play(Transform(mobj_g1, mobj_g2))
+        # self.play(Transform(mobj_g1, mobj_g2))
+        self.play(*transform_graphviz_graphs(mobj_g1, mobj_g2))
         self.wait(1)
         """
         g = LR1Parser(GRAMMAR)
@@ -313,3 +396,4 @@ class AnimateGraphs(Scene):
             AbstractSyntaxTree(g.grammar.prods[2])
         ]
         self.add(GraphvizGraph(lr_stack_to_graphviz(stack, g.grammar)))
+        """
