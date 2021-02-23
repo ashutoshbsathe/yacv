@@ -27,7 +27,7 @@ COLORS = [
 ]
 INFINITY = 2048
 GRAMMAR = 'expression-grammar.txt'
-STRING = 'id + id * id - id'
+STRING = 'id + id * id / id - id + ( id / id / id )'
 class GraphvizGraph(VGroup):
     def __init__(self, graph, **kwargs):
         digest_config(self, kwargs, locals())
@@ -131,7 +131,7 @@ def transform_graphviz_graphs(old, new):
     anims = []
     
     def is_equiv_vertices(n):
-        return old.graph.get_node(n).attr['label'][0] == \
+        return int(n) < 0 or old.graph.get_node(n).attr['label'][0] == \
                 new.graph.get_node(n).attr['label'][0]
     for n in list(common_nodes):
         if is_equiv_vertices(n):
@@ -166,6 +166,76 @@ def transform_graphviz_graphs(old, new):
 
     return anims
 
+def ast_to_graphviz_inbuilt_nodeid(ast, g):
+    G = pgv.AGraph(name='AST{}'.format(ast.node_id), directed=True)
+    stack = [ast]
+    prods = []
+    while stack:
+        top = stack.pop(0)
+        node = top.node_id 
+        assert node is not None 
+        if str(node) not in G.nodes():
+            G.add_node(node, label=top.root)
+            # node_id += 1
+        if top.prod_id is not None:
+            color = COLORS[top.prod_id % len(COLORS)]
+            G.get_node(node).attr['fontcolor'] = color
+        desc_ids = []
+        for desc in top.desc:
+            if desc.root == EPSILON:
+                label = G.get_node(node).attr['label']
+                label = '<' + label + ' = &#x3B5;>'
+                G.get_node(node).attr['label'] = label
+                break
+            assert desc.node_id is not None
+            G.add_node(desc.node_id, label=desc.root)
+            if top.prod_id is not None:
+                color = COLORS[top.prod_id % len(COLORS)]
+            else:
+                color = '#FFFF00'
+            G.add_edge(node, desc.node_id, color=color)
+            desc_ids.append(desc.node_id)
+            stack.append(desc)
+            # node_id += 1
+        prods.append(desc_ids)
+
+    # Figure out terminal nodes
+    terminal_nodes = []
+    stack = [G.nodes()[0]]
+    visited = []
+    terminals = g.terminals
+    while stack:
+        node = stack.pop(-1)
+        if node not in visited:
+            visited.append(node)
+            if node.attr['label'] in terminals:
+                terminal_nodes.append(node)
+            for i in range(len(G.successors(node))-1, -1, -1):
+                stack.append(G.successors(node)[i])
+    
+    # Fix the alignment of RHS of productions
+    for i, prod in enumerate(prods):
+        nonterminals = []
+        for node_id in prod:
+            if G.get_node(node_id).attr['label'] in terminals:
+                continue
+            nonterminals.append(G.get_node(node_id))
+        if len(nonterminals) <= 1:
+            continue
+        nt = G.subgraph(nonterminals, name='Production{}AST{}'.format(i, ast.node_id))
+        nt.graph_attr['rank'] = 'same'
+        for j in range(len(nt.nodes())-1):
+            nt.add_edge(nonterminals[j], nonterminals[j+1], style='dashed', color='#000000',\
+                    weight=INFINITY)
+    """
+    # Finally, add the terminal subgraphs
+    t = G.add_subgraph(terminal_nodes, name='Terminals{}'.format(init_node))
+    t.graph_attr['rank'] = 'max'
+    for i in range(len(t.nodes())-1):
+        t.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
+    """
+
+    return G, terminal_nodes
 def ast_to_graphviz(ast, g, init_node=0):
     node_id = init_node
     G = pgv.AGraph(name='AbstractSyntaxTree{}'.format(init_node), directed=True)
@@ -245,8 +315,9 @@ def lr_stack_to_graphviz(stack, grammar):
         if not isinstance(item, AbstractSyntaxTree):
             continue
         if len(item.desc) > 1:
-            root_nodes.append(node_id)
-        g, t_nodes = ast_to_graphviz(item, grammar, node_id)
+            root_nodes.append(item.node_id)
+        # g, t_nodes = ast_to_graphviz(item, grammar, node_id)
+        g, t_nodes = ast_to_graphviz_inbuilt_nodeid(item, grammar)
         node_id += len(g.nodes())
         terminal_nodes.extend(t_nodes)
         # Add all the nodes and edges from `g` to `ret`
@@ -269,17 +340,21 @@ def lr_stack_to_graphviz(stack, grammar):
             for e in graph.edges():
                 prod.add_edge(e[0], e[1], style='invis', weight=INFINITY)
 
-    # Also make a subgraph of roots so that their order is preserved
-    for i in range(len(root_nodes)):
-        for j in range(len(root_nodes)):
-            ret.add_edge(root_nodes[i], root_nodes[j], style='invis')
-        
+    if len(root_nodes) > 1:
+        # Add an auxilliary root node 
+        ret.add_node(-1, style='invis', label='')
+        for n in root_nodes:
+            ret.add_edge(-1, n, style='invis')
+        roots = ret.add_subgraph(root_nodes, name='Roots')
+        roots.graph_attr['rank'] = 'min'
+        for i in range(len(roots.nodes())-1):
+            roots.add_edge(root_nodes[i], root_nodes[i+1], style='invis', weight=INFINITY)
     # Finally, all the things are done
     # now let's add the terminals
     term = ret.add_subgraph(terminal_nodes, name='Terminals')
     term.graph_attr['rank'] = 'sink'
     for i in range(len(term.nodes()) - 1):
-        term.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
+        term.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis', weight=INFINITY)
    
     ret.edge_attr['dir'] = 'none'
     ret.node_attr['ordering'] = 'out'
@@ -319,6 +394,9 @@ class AnimateGraphs(Scene):
         mobj = GraphvizGraph(lr_stack_to_graphviz(stack, g.grammar))
         self.add(mobj)
         """
+        # Adding nodes while building the tree itself is very important 
+        # This we the nodes are always correctly numbered for graphviz
+        curr_node_id = 0
         g = LR1Parser(GRAMMAR)
         string = [x.strip() for x in STRING.split(' ')]
         if string[-1] != '$':
@@ -337,7 +415,10 @@ class AnimateGraphs(Scene):
                 # TODO: maybe allow preference in case of SR conflict ?
                 entry = entry[0]
             if entry[0] == 's':
-                stack.append(AbstractSyntaxTree(a))
+                t = AbstractSyntaxTree(a)
+                t.node_id = curr_node_id
+                curr_node_id += 1
+                stack.append(t)
                 stack.append(int(entry[1:]))
                 string.pop(0)
             elif entry[0] == 'r':
@@ -345,6 +426,8 @@ class AnimateGraphs(Scene):
                 prod = g.grammar.prods[prod_id]
                 new_tree = AbstractSyntaxTree(prod.lhs)
                 new_tree.prod_id = prod_id
+                new_tree.node_id = curr_node_id
+                curr_node_id += 1
                 # I'm getting the popped list and then traversing it in
                 # reverse fashion again
                 # TODO: can this be optimized ?

@@ -6,6 +6,7 @@ class AbstractSyntaxTree(object):
             self.root = None
             self.desc = []
             self.prod_id = None
+            self.node_id = None
         if len(args) == 1:
             if isinstance(args[0], Production):
                 self.root = args[0].lhs
