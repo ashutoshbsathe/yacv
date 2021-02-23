@@ -27,7 +27,7 @@ COLORS = [
 ]
 INFINITY = 2048
 GRAMMAR = 'expression-grammar.txt'
-STRING = 'id + id * id / id - ( id + id )'
+STRING = 'id + id * id - id'
 class GraphvizGraph(VGroup):
     def __init__(self, graph, **kwargs):
         digest_config(self, kwargs, locals())
@@ -118,6 +118,8 @@ class GraphvizGraph(VGroup):
             x, y = self.gridify(x, y)
             dot.move_to(x*RIGHT + y*UP)
             dot.scale(0.5)
+            if n.attr['fontcolor']:
+                dot.set_color(n.attr['fontcolor'])
             self.add(dot)
             self.nodes[str(n)] = dot
         self.graph_added = True
@@ -127,11 +129,24 @@ def transform_graphviz_graphs(old, new):
     common_edges = set(old.edges.keys()).intersection(set(new.edges.keys()))
     
     anims = []
+    
+    def is_equiv_vertices(n):
+        return old.graph.get_node(n).attr['label'][0] == \
+                new.graph.get_node(n).attr['label'][0]
     for n in list(common_nodes):
-        anims.append(Transform(old.nodes[n], new.nodes[n]))
+        if is_equiv_vertices(n):
+            anims.append(Transform(old.nodes[n], new.nodes[n]))
+        else:
+            anims.append(FadeOut(old.nodes[n]))
+            anims.append(FadeIn(new.nodes[n]))
 
     for e in list(common_edges):
-        anims.append(Transform(old.edges[e], new.edges[e]))
+        v0, v1 = e[1:-1].split(',')
+        if is_equiv_vertices(v0) and is_equiv_vertices(v1):
+            anims.append(Transform(old.edges[e], new.edges[e]))
+        else:
+            anims.append(FadeOut(old.edges[e]))
+            anims.append(FadeIn(new.edges[e]))
 
     old_nodes = set(old.nodes.keys()).difference(common_nodes)
     old_edges = set(old.edges.keys()).difference(common_edges)
@@ -144,10 +159,10 @@ def transform_graphviz_graphs(old, new):
     new_nodes = set(new.nodes.keys()).difference(common_nodes)
     new_edges = set(new.edges.keys()).difference(common_edges)
     for n in list(new_nodes):
-        anims.append(ShowCreation(new.nodes[n]))
+        anims.append(FadeIn(new.nodes[n]))
 
     for e in list(new_edges):
-        anims.append(ShowCreation(new.edges[e]))
+        anims.append(FadeIn(new.edges[e]))
 
     return anims
 
@@ -229,7 +244,8 @@ def lr_stack_to_graphviz(stack, grammar):
     for item in stack:
         if not isinstance(item, AbstractSyntaxTree):
             continue
-        root_nodes.append(node_id)
+        if len(item.desc) > 1:
+            root_nodes.append(node_id)
         g, t_nodes = ast_to_graphviz(item, grammar, node_id)
         node_id += len(g.nodes())
         terminal_nodes.extend(t_nodes)
