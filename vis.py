@@ -1,3 +1,6 @@
+# only for being able to run via `manimgl`
+import sys
+sys.path.append('/home/ashutosh/parser-vis/')
 from manimlib import *
 import pygraphviz as pgv
 import numpy as np
@@ -8,7 +11,7 @@ import argparse
 manim_args = {}
 
 class LRParsingVisualizer(Scene):
-    def setup(self, grammar='expression-grammar.txt', string='id', **kwargs):
+    def setup(self, grammar='expression-grammar.txt', string='id + id', **kwargs):
         # Add a parser type argument here in the future
         self.grammar = grammar 
         if isinstance(string, str):
@@ -29,8 +32,9 @@ class LRParsingVisualizer(Scene):
         prev_mobject = None 
         curr_mobject = None 
         curr_node_id = 0 # Assigning the node ids as we build the tree 
-        status_mobject  = Tex('LOL')
-        status_mobject.move_to(5*RIGHT + 3*UP)
+        status_mobject  = Tex('START')
+        status_pos = 5.5*LEFT + 3*UP
+        status_mobject.move_to(status_pos)
         while True:
             top = stack[-1]
             a = string[0]
@@ -56,16 +60,12 @@ class LRParsingVisualizer(Scene):
                 stack.append(int(entry[1:]))
                 string.pop(0)
                 # Starting Animation 
-                """
                 new_status_mobject=Tex('SHIFT \\; {}'.format(int(entry[1:])))
-                new_status_mobject.move_to(5*RIGHT+3*UP)
-                print(id(new_status_mobject))
-                self.play(Transform(status_mobject, \
-                        new_status_mobject))
+                new_status_mobject.move_to(status_pos)
+                self.play(ShowCreationThenDestructionAround(status_mobject))
+                self.play(Transform(status_mobject, new_status_mobject))
                 self.wait(1)
-                status_mobject = new_status_mobject 
-                print(id(status_mobject))
-                """
+                self.remove(new_status_mobject)
                 all_anims = []
                 curr_stack_mobject = StackMobject(stack)
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
@@ -104,20 +104,20 @@ class LRParsingVisualizer(Scene):
                     anims.append(Indicate(old_stack_mobject.elements[i]))
                 self.play(*anims)
                 self.wait(1) 
-                """
+                
                 prod_text = '{} \\rightarrow'.format(prod.lhs)
                 if prod.rhs[0] == EPSILON:
                     prod_text += ' \\epsilon'
                 else:
                     prod_text += ' {}'.format(' '.join(prod.rhs))
                 new_status_mobject = Tex(prod_text)
-                new_status_mobject.move_to(5*RIGHT+3*UP)
-                print(id(status_mobject))
-                self.play(Transform(status_mobject, \
-                        new_status_mobject))
+                new_status_mobject.move_to(status_pos)
+                self.play(ShowCreationThenDestructionAround(status_mobject))
+                self.play(Transform(status_mobject, new_status_mobject))
+                # self.play(Transform(status_mobject, \
+                #        new_status_mobject))
                 self.wait(1)
-                status_mobject = new_status_mobject 
-                """
+                self.remove(new_status_mobject)
                 # Ending animation
 
                 # I'm getting the popped list and then traversing it in 
@@ -174,6 +174,12 @@ class LRParsingVisualizer(Scene):
                 assert prod.rhs[-1] == '$' and len(prod.rhs) == 2
                 # Parsing successful 
                 # TODO: Log that parsing is successful 
+                new_status_mobject = Tex("ACCEPT")
+                new_status_mobject.move_to(status_pos)
+                new_status_mobject.set_color(YELLOW)
+                self.play(ShowCreationThenDestructionAround(status_mobject))
+                self.play(Transform(status_mobject, new_status_mobject))
+                self.remove(new_status_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                         p.grammar))
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)

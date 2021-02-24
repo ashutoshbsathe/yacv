@@ -7,7 +7,7 @@ from ll1 import *
 from lr import *
 MAX_AST_WIDTH  = 10
 MAX_AST_HEIGHT = 7
-MAX_STACK_VIS = 8
+MAX_STACK_VIS = 6
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):
@@ -358,14 +358,14 @@ class StackMobject(VGroup):
         digest_config(self, kwargs, locals())
         super().__init__(**kwargs)
         bottom_line = Line(start=[-6, -3, 0], end=[-5, -3, 0])
-        left_line = Line(start=[-6, -3, 0], end=[-6, 3, 0])
-        right_line = Line(start=[-5, -3, 0], end=[-5, 3, 0])
+        left_line = Line(start=[-6, -3, 0], end=[-6, 2, 0])
+        right_line = Line(start=[-5, -3, 0], end=[-5, 2, 0])
         bottom_text = Tex('\\dots')
         bottom_text.next_to(bottom_line, UP)
         self.add(bottom_line)
         self.add(left_line)
         self.add(right_line)
-        self.add(Line(start=[-5, -3, 0], end=[-5, 3, 0]))
+        self.add(Line(start=[-5, -3, 0], end=[-5, 2, 0]))
         self.bottom = bottom_line 
         self.left = left_line 
         self.right = right_line 
@@ -415,6 +415,7 @@ def transform_stacks(old, new):
 
     for i in new_idx:
         anims.append(FadeIn(new.elements[i]))
-    
+    for i in new_idx:
+        anims.append(Flash(new.elements[i], color=GREEN))
     anims.append(ReplacementTransform(old.arrow, new.arrow))
     return anims
