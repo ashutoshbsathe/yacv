@@ -7,6 +7,7 @@ from ll1 import *
 from lr import *
 MAX_AST_WIDTH  = 10
 MAX_AST_HEIGHT = 7
+MAX_STACK_VISIBILITY = 8
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):
@@ -121,7 +122,7 @@ def transform_graphviz_graphs(old, new):
 
     for n in list(common_nodes):
         if is_equiv_vertices(n):
-            anims.append(Transform(old.nodes[n], new.nodes[n]))
+            anims.append(ReplacementTransform(old.nodes[n], new.nodes[n]))
             print('Transforming from {} to {}'.format(old.nodes[n].get_center(), new.nodes[n].get_center()))
         else:
             anims.append(FadeOut(old.nodes[n]))
@@ -130,7 +131,7 @@ def transform_graphviz_graphs(old, new):
     for e in list(common_edges):
         u, v = e[1:-1].split(',')
         if is_equiv_vertices(u) and is_equiv_vertices(v):
-            anims.append(Transform(old.edges[e], new.edges[e]))
+            anims.append(ReplacementTransform(old.edges[e], new.edges[e]))
         else:
             anims.append(FadeOut(old.edges[e]))
             anims.append(FadeIn(new.edges[e]))
@@ -351,3 +352,39 @@ class ScreenGrid(VGroup):
 
 def coord(x, y, z=0):
     return np.array([x, y, z])
+
+class StackMobject(VGroup):
+    def __init__(self, stack=None, **kwargs):
+        digest_config(self, kwargs, locals())
+        super().__init__(**kwargs)
+        bottom_line = Line(start=[-6, -3, 0], end=[-5, -3, 0])
+        bottom_text = Tex('\\dots')
+        bottom_text.next_to(bottom_line, UP)
+        self.add(bottom_line)
+        self.add(Line(start=[-6, -3, 0], end=[-6, 3, 0]))
+        self.add(Line(start=[-5, -3, 0], end=[-5, 3, 0]))
+        self.bottom_line = bottom_line 
+        self.bottom_text = bottom_text
+        prev_mobject = self.bottom_line 
+        if stack is not None:
+            self.stack_len = len(stack)
+            if self.stack_len > MAX_STACK_VISIBILITY:
+                self.remove(bottom_line)
+                self.add(bottom_text)
+                prev_mobject = bottom_text
+            stack = stack[-MAX_STACK_VISIBILITY:]
+            for i, elem in enumerate(stack):
+                if isinstance(elem, AbstractSyntaxTree):
+                    text = elem.root 
+                else:
+                    text = str(elem) 
+                new_mobject = Tex(text)
+                new_mobject.next_to(prev_mobject, UP)
+                self.add(new_mobject)
+                prev_mobject = new_mobject
+        self.arrow = Tex('\\downarrow')
+        self.arrow.next_to(prev_mobject, UP)
+        self.add(self.arrow)
+
+def transform_stacks(old, new):
+    return 

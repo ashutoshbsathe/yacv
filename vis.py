@@ -25,6 +25,7 @@ class LRParsingVisualizer(Scene):
         p = LR1Parser(self.grammar)
         string = self.string 
         stack = [0]
+        old_stack_mobject = None
         prev_mobject = None 
         curr_mobject = None 
         curr_node_id = 0 # Assigning the node ids as we build the tree 
@@ -98,15 +99,27 @@ class LRParsingVisualizer(Scene):
             else:
                 raise ValueError('Unknown error while parsing')
             # Code for animation 
+            anims = []
+            curr_stack_mobject = StackMobject(stack)
+            if old_stack_mobject is None:
+                self.add(curr_stack_mobject)
+            else:
+                anims.append(TransformMatchingShapes(old_stack_mobject, curr_stack_mobject))
+            self.play(*anims)
+            if old_stack_mobject is not None:
+                self.remove(old_stack_mobject)
+            self.wait(1)
+            old_stack_mobject = curr_stack_mobject
+
             curr_mobject = GraphvizMobject(stack_to_graphviz(stack, p.grammar))
             if prev_mobject is not None:
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
                 self.play(*anims)
                 self.remove(prev_mobject)
+                self.wait(1)
             else:
                 self.add(curr_mobject)
             prev_mobject = curr_mobject
-
         return 
 
 
@@ -124,4 +137,5 @@ if __name__ == '__main__':
     """
     vis = LRParsingVisualizer()
     vis.setup('expression-grammar.txt', 'id + id / id - ( id + id )')
+    # vis.setup('expression-grammar.txt', 'id + id')
     vis.construct()
