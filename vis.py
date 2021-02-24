@@ -8,6 +8,7 @@ from ll1 import *
 from lr import *
 from mobjects import *
 import argparse
+from copy import deepcopy
 manim_args = {}
 
 class LRParsingVisualizer(Scene):
@@ -34,6 +35,10 @@ class LRParsingVisualizer(Scene):
         curr_node_id = 0 # Assigning the node ids as we build the tree 
         status_mobject  = Tex('START')
         status_pos = 5.5*LEFT + 3*UP
+        string_mobject = Text('String: ' + ' '.join(string))
+        string_pos = 0*LEFT + 3.5*DOWN
+        string_mobject.move_to(string_pos)
+        string_mobject.scale(0.5)
         status_mobject.move_to(status_pos)
         while True:
             top = stack[-1]
@@ -188,7 +193,11 @@ class LRParsingVisualizer(Scene):
                 break 
             else:
                 raise ValueError('Unknown error while parsing')
-            
+            new_string_mobject = Text('String: ' + ' '.join(string))
+            new_string_mobject.move_to(string_pos)
+            new_string_mobject.scale(0.5)
+            self.play(Transform(string_mobject, new_string_mobject))
+            self.remove(new_string_mobject)
         return 
 
 
