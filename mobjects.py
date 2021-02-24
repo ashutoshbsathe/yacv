@@ -7,7 +7,7 @@ from ll1 import *
 from lr import *
 MAX_AST_WIDTH  = 10
 MAX_AST_HEIGHT = 7
-MAX_STACK_VISIBILITY = 8
+MAX_STACK_VIS = 8
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):
@@ -358,21 +358,32 @@ class StackMobject(VGroup):
         digest_config(self, kwargs, locals())
         super().__init__(**kwargs)
         bottom_line = Line(start=[-6, -3, 0], end=[-5, -3, 0])
+        left_line = Line(start=[-6, -3, 0], end=[-6, 3, 0])
+        right_line = Line(start=[-5, -3, 0], end=[-5, 3, 0])
         bottom_text = Tex('\\dots')
         bottom_text.next_to(bottom_line, UP)
         self.add(bottom_line)
-        self.add(Line(start=[-6, -3, 0], end=[-6, 3, 0]))
+        self.add(left_line)
+        self.add(right_line)
         self.add(Line(start=[-5, -3, 0], end=[-5, 3, 0]))
-        self.bottom_line = bottom_line 
-        self.bottom_text = bottom_text
-        prev_mobject = self.bottom_line 
+        self.bottom = bottom_line 
+        self.left = left_line 
+        self.right = right_line 
+
+        self.elements = {}
+        prev_mobject = self.bottom
         if stack is not None:
             self.stack_len = len(stack)
-            if self.stack_len > MAX_STACK_VISIBILITY:
+            if self.stack_len > MAX_STACK_VIS:
                 self.remove(bottom_line)
                 self.add(bottom_text)
+                self.bottom = bottom_text
                 prev_mobject = bottom_text
-            stack = stack[-MAX_STACK_VISIBILITY:]
+            if len(stack) > MAX_STACK_VIS:
+                start_idx = stack.index(stack[-MAX_STACK_VIS])
+            else:
+                start_idx = 0
+            stack = stack[-MAX_STACK_VIS:]
             for i, elem in enumerate(stack):
                 if isinstance(elem, AbstractSyntaxTree):
                     text = elem.root 
@@ -382,9 +393,28 @@ class StackMobject(VGroup):
                 new_mobject.next_to(prev_mobject, UP)
                 self.add(new_mobject)
                 prev_mobject = new_mobject
+                self.elements[start_idx + i] = new_mobject 
         self.arrow = Tex('\\downarrow')
         self.arrow.next_to(prev_mobject, UP)
         self.add(self.arrow)
 
 def transform_stacks(old, new):
-    return 
+    # Should we animate the bottom_line ?
+    anims = []
+    anims.append(ReplacementTransform(old.left, new.left))
+    anims.append(ReplacementTransform(old.right, new.right))
+    anims.append(ReplacementTransform(old.bottom, new.bottom))
+    common_idx = set(old.elements.keys()).intersection(new.elements.keys())
+    old_idx = set(old.elements.keys()).difference(common_idx)
+    new_idx = set(new.elements.keys()).difference(common_idx)
+    for i in common_idx:
+        anims.append(ReplacementTransform(old.elements[i], new.elements[i]))
+
+    for i in old_idx:
+        anims.append(FadeOut(old.elements[i]))
+
+    for i in new_idx:
+        anims.append(FadeIn(new.elements[i]))
+    
+    anims.append(ReplacementTransform(old.arrow, new.arrow))
+    return anims

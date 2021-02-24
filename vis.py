@@ -104,7 +104,7 @@ class LRParsingVisualizer(Scene):
             if old_stack_mobject is None:
                 self.add(curr_stack_mobject)
             else:
-                anims.append(TransformMatchingShapes(old_stack_mobject, curr_stack_mobject))
+                anims.extend(transform_stacks(old_stack_mobject, curr_stack_mobject))
             self.play(*anims)
             if old_stack_mobject is not None:
                 self.remove(old_stack_mobject)
