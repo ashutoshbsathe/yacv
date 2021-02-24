@@ -20,8 +20,8 @@ class LRParsingVisualizer(Scene):
         super().setup(**kwargs)
 
     def construct(self):
-        grid = ScreenGrid()
-        self.add(grid)
+        # grid = ScreenGrid()
+        # self.add(grid)
         p = LR1Parser(self.grammar)
         string = self.string 
         stack = [0]
@@ -29,10 +29,14 @@ class LRParsingVisualizer(Scene):
         prev_mobject = None 
         curr_mobject = None 
         curr_node_id = 0 # Assigning the node ids as we build the tree 
+        status_mobject  = Tex('LOL')
+        status_mobject.move_to(5*RIGHT + 3*UP)
         while True:
             top = stack[-1]
             a = string[0]
             entry = p.parsing_table.at[top, (ACTION, a)]
+            if old_stack_mobject is None:
+                old_stack_mobject = StackMobject(stack)
             if entry == ERROR:
                 # TODO: Get better error messages here
                 raise ValueError('Parsing error. Got ERROR entry for top = {}, a = {}'.format(top, a))
@@ -51,6 +55,37 @@ class LRParsingVisualizer(Scene):
                 stack.append(t)
                 stack.append(int(entry[1:]))
                 string.pop(0)
+                # Starting Animation 
+                """
+                new_status_mobject=Tex('SHIFT \\; {}'.format(int(entry[1:])))
+                new_status_mobject.move_to(5*RIGHT+3*UP)
+                print(id(new_status_mobject))
+                self.play(Transform(status_mobject, \
+                        new_status_mobject))
+                self.wait(1)
+                status_mobject = new_status_mobject 
+                print(id(status_mobject))
+                """
+                all_anims = []
+                curr_stack_mobject = StackMobject(stack)
+                anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
+                curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
+                            p.grammar))
+                if prev_mobject is not None:
+                    anim_t = transform_graphviz_graphs(prev_mobject, \
+                            curr_mobject)
+                else:
+                    anim_t = [ShowCreation(curr_mobject)]
+                all_anims.extend(anim_s)
+                all_anims.extend(anim_t)
+                self.play(*all_anims)
+                self.wait(1)
+                self.remove(old_stack_mobject)
+                if prev_mobject is not None:
+                    self.remove(prev_mobject)
+                old_stack_mobject = curr_stack_mobject
+                prev_mobject = curr_mobject 
+                # Ending Animation 
             elif entry[0] == 'r':
                 prod_id = int(entry[1:])
                 prod = p.grammar.prods[prod_id]
@@ -58,6 +93,32 @@ class LRParsingVisualizer(Scene):
                 new_tree.prod_id = prod_id 
                 new_tree.node_id = curr_node_id 
                 curr_node_id += 1
+                
+                # Starting animation 
+                # highlight 2 * len(prod.rhs) elements on the stack 
+                l = old_stack_mobject.stack_len
+                to_highlight = 2*len(prod.rhs) if l > 2*len(prod.rhs) else l 
+                keys = list(old_stack_mobject.elements.keys())
+                anims = []
+                for i in keys[-to_highlight:]:
+                    anims.append(Indicate(old_stack_mobject.elements[i]))
+                self.play(*anims)
+                self.wait(1) 
+                """
+                prod_text = '{} \\rightarrow'.format(prod.lhs)
+                if prod.rhs[0] == EPSILON:
+                    prod_text += ' \\epsilon'
+                else:
+                    prod_text += ' {}'.format(' '.join(prod.rhs))
+                new_status_mobject = Tex(prod_text)
+                new_status_mobject.move_to(5*RIGHT+3*UP)
+                print(id(status_mobject))
+                self.play(Transform(status_mobject, \
+                        new_status_mobject))
+                self.wait(1)
+                status_mobject = new_status_mobject 
+                """
+                # Ending animation
 
                 # I'm getting the popped list and then traversing it in 
                 # reverse direction again just so that memory references 
@@ -79,6 +140,14 @@ class LRParsingVisualizer(Scene):
                     new_tree.desc.append(AbstractSyntaxTree(EPSILON))
                 for i in range(len(popped_list)-1,-1,-1):
                     new_tree.desc.append(popped_list[i])
+                # Starting Animation 
+                curr_stack_mobject = StackMobject(stack)
+                anims = transform_stacks(old_stack_mobject, curr_stack_mobject)
+                self.play(*anims)
+                self.wait(1)
+                old_stack_mobject = curr_stack_mobject
+                self.add(old_stack_mobject)
+                # Ending Animation 
                 new_top = stack[-1]
                 nonterminal = prod.lhs 
                 new_state = p.parsing_table.at[new_top, (GOTO, nonterminal)]
@@ -86,6 +155,20 @@ class LRParsingVisualizer(Scene):
                 if isinstance(new_state, list):
                     new_state = new_state[0]
                 stack.append(int(new_state))
+                # Starting Animation 
+                all_anims = []
+                curr_stack_mobject = StackMobject(stack)
+                anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
+                curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
+                        p.grammar))
+                anim_t = transform_graphviz_graphs(prev_mobject, curr_mobject)
+                all_anims.extend(anim_s)
+                all_anims.extend(anim_t)
+                self.play(*all_anims)
+                self.wait(1)
+                old_stack_mobject = curr_stack_mobject
+                prev_mobject = curr_mobject 
+                # Ending Animation 
             elif entry == ACCEPT:
                 prod = p.grammar.prods[0]
                 assert prod.rhs[-1] == '$' and len(prod.rhs) == 2
@@ -95,10 +178,24 @@ class LRParsingVisualizer(Scene):
                         p.grammar))
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
                 self.play(*anims)
+
                 break 
             else:
                 raise ValueError('Unknown error while parsing')
+            
             # Code for animation 
+            print(self.camera.static_mobject_to_render_group_list)
+            """
+            curr_mobject = GraphvizMobject(stack_to_graphviz(stack, p.grammar))
+            if prev_mobject is not None:
+                anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
+                self.play(*anims)
+                self.remove(prev_mobject)
+                self.wait(1)
+            else:
+                self.add(curr_mobject)
+            prev_mobject = curr_mobject
+
             anims = []
             curr_stack_mobject = StackMobject(stack)
             if old_stack_mobject is None:
@@ -110,16 +207,7 @@ class LRParsingVisualizer(Scene):
                 self.remove(old_stack_mobject)
             self.wait(1)
             old_stack_mobject = curr_stack_mobject
-
-            curr_mobject = GraphvizMobject(stack_to_graphviz(stack, p.grammar))
-            if prev_mobject is not None:
-                anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
-                self.play(*anims)
-                self.remove(prev_mobject)
-                self.wait(1)
-            else:
-                self.add(curr_mobject)
-            prev_mobject = curr_mobject
+            """
         return 
 
 
@@ -136,6 +224,6 @@ if __name__ == '__main__':
     bme.construct()
     """
     vis = LRParsingVisualizer()
-    vis.setup('expression-grammar.txt', 'id + id / id - ( id + id )')
-    # vis.setup('expression-grammar.txt', 'id + id')
+    # vis.setup('expression-grammar.txt', 'id + id / id - ( id + id )')
+    vis.setup('expression-grammar.txt', 'id + id')
     vis.construct()
