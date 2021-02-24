@@ -189,31 +189,6 @@ class LRParsingVisualizer(Scene):
             else:
                 raise ValueError('Unknown error while parsing')
             
-            # Code for animation 
-            print(self.camera.static_mobject_to_render_group_list)
-            """
-            curr_mobject = GraphvizMobject(stack_to_graphviz(stack, p.grammar))
-            if prev_mobject is not None:
-                anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
-                self.play(*anims)
-                self.remove(prev_mobject)
-                self.wait(1)
-            else:
-                self.add(curr_mobject)
-            prev_mobject = curr_mobject
-
-            anims = []
-            curr_stack_mobject = StackMobject(stack)
-            if old_stack_mobject is None:
-                self.add(curr_stack_mobject)
-            else:
-                anims.extend(transform_stacks(old_stack_mobject, curr_stack_mobject))
-            self.play(*anims)
-            if old_stack_mobject is not None:
-                self.remove(old_stack_mobject)
-            self.wait(1)
-            old_stack_mobject = curr_stack_mobject
-            """
         return 
 
 

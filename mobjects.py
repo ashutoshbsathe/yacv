@@ -8,6 +8,7 @@ from lr import *
 MAX_AST_WIDTH  = 10
 MAX_AST_HEIGHT = 7
 MAX_STACK_VIS = 6
+TEXT_SCALE = 0.5
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):
@@ -87,6 +88,7 @@ class GraphvizMobject(VGroup):
             dot.move_to(x*RIGHT + y*UP)
             if n.attr['fontcolor']:
                 dot.set_color(n.attr['fontcolor'])
+            dot.scale(TEXT_SCALE)
             self.add(dot)
             self.nodes[str(n)] = dot 
             print(64 * '-')
@@ -391,12 +393,18 @@ class StackMobject(VGroup):
                     text = str(elem) 
                 new_mobject = Tex(text)
                 new_mobject.next_to(prev_mobject, UP)
+                new_mobject.scale(TEXT_SCALE)
                 self.add(new_mobject)
                 prev_mobject = new_mobject
                 self.elements[start_idx + i] = new_mobject 
         self.arrow = Tex('\\downarrow')
         self.arrow.next_to(prev_mobject, UP)
         self.add(self.arrow)
+
+        self.indicator = Text('Stack')
+        self.indicator.next_to(self.bottom, DOWN)
+        self.indicator.scale(TEXT_SCALE)
+        self.add(self.indicator)
 
 def transform_stacks(old, new):
     # Should we animate the bottom_line ?
@@ -418,4 +426,5 @@ def transform_stacks(old, new):
     for i in new_idx:
         anims.append(Flash(new.elements[i], color=GREEN))
     anims.append(ReplacementTransform(old.arrow, new.arrow))
+    anims.append(ReplacementTransform(old.indicator, new.indicator))
     return anims
