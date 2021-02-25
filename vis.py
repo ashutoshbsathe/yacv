@@ -184,7 +184,6 @@ class LRParsingVisualizer(Scene):
                 self.play(*anims)
                 self.wait(1)
                 old_stack_mobject = curr_stack_mobject
-                self.add(old_stack_mobject)
                 # Ending Animation 
                 new_top = stack[-1]
                 nonterminal = prod.lhs 
@@ -204,6 +203,8 @@ class LRParsingVisualizer(Scene):
                 all_anims.extend(anim_t)
                 self.play(*all_anims)
                 self.wait(1)
+                self.remove(old_stack_mobject)
+                self.remove(prev_mobject)
                 old_stack_mobject = curr_stack_mobject
                 prev_mobject = curr_mobject 
                 # Ending Animation 
