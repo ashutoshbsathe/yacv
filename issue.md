@@ -68,3 +68,4 @@ StopIteration
 ## Observations
 1. `139697572802032` is id of the `status_mobject` which gets deleted mysteriously by the manim
 2. This can be because the [`add` function calls `remove`](https://github.com/3b1b/manim/blob/9d1c8df095b47b14e5e3143655feb9a52671333e/manimlib/scene/scene.py#L204) for some reason ? Apparently this is done to prevent a single object from a group being deleted but it still doesn't explain why an `Mobject` that is live in one loop iteration is not live for another. Python versions ? Maybe. But then why would the [low resolution animation](progress_samples/ComplexEqn.mp4) render at all ?
+3. This is probably related to use of `/` sign. I think it errors out on this. I might need to check this later
