@@ -72,6 +72,12 @@ class LL1ParsingVisualizer(Scene):
             if stack[-1].root == a:
                 popped_stack.append(stack.pop(-1))
                 a = string.pop(0)
+                new_status_mobject = Text('Match {}'.format(a))
+                new_status_mobject.scale(STRING_SCALE)
+                new_status_mobject.move_to(status_pos)
+                self.play(Transform(status_mobject, new_status_mobject))
+                self.play(ShowCreationThenDestructionAround(new_status_mobject))
+                self.remove(new_status_mobject)
             elif stack[-1].root in p.grammar.terminals:
                 raise ValueError('Error because top = {}, terminal'.format(stack[-1].root))
             elif p.parsing_table.at[stack[-1].root.replace('\\$', '$'), a] ==\
@@ -81,6 +87,19 @@ class LL1ParsingVisualizer(Scene):
                     ACCEPT:
                 prod = p.parsing_table.at[stack[-1].root, a][0]
                 print(prod)
+                prod_text = '{} '.format(prod.lhs)
+                prod_text += '$\\rightarrow$' if manimce else '\\rightarrow'
+                if prod.rhs[0] == EPSILON:
+                    prod_text += ' $\\epsilon$' if manimce else ' \\epsilon'
+                else:
+                    prod_text += ' {}'.format(''.join(prod.rhs)\
+                            .replace('$', '\\$'))
+                new_status_mobject = Tex(prod_text)
+                new_status_mobject.scale(STATUS_SCALE)
+                new_status_mobject.move_to(status_pos)
+                self.play(Transform(status_mobject, new_status_mobject))
+                self.play(ShowCreationThenDestructionAround(new_status_mobject))
+                self.remove(new_status_mobject)
                 stack[-1].prod_id = p.grammar.prods.index(prod)
                 desc_list = []
                 for symbol in prod.rhs:
@@ -126,6 +145,14 @@ class LL1ParsingVisualizer(Scene):
             prev_mobject = curr_mobject 
             # Ending Animations 
             print(popped_stack)
+        new_status_mobject = Tex('ACCEPT')
+        new_status_mobject.scale(STATUS_SCALE)
+        new_status_mobject.move_to(status_pos)
+        new_status_mobject.set_color(YELLOW)
+        self.play(Transform(status_mobject, new_status_mobject))
+        self.play(ShowCreationThenDestructionAround(new_status_mobject))
+        self.wait(1)
+        self.remove(new_status_mobject)
         return 
 
 
