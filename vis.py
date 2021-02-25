@@ -9,10 +9,12 @@ from lr import *
 from mobjects import *
 import argparse
 from copy import deepcopy
+STATUS_SCALE = 0.6
+STRING_SCALE = 0.5
 manim_args = {}
 
 class LRParsingVisualizer(Scene):
-    def setup(self, grammar='expression-grammar.txt', string='id + id', **kwargs):
+    def setup(self, grammar='expression-grammar.txt', string='id + id / id - ( id + id )', **kwargs):
         # Add a parser type argument here in the future
         self.grammar = grammar 
         if isinstance(string, str):
@@ -33,19 +35,29 @@ class LRParsingVisualizer(Scene):
         prev_mobject = None 
         curr_mobject = None 
         curr_node_id = 0 # Assigning the node ids as we build the tree 
-        status_mobject  = Tex('START')
+        status_mobject  = Text('START')
+        status_mobject.scale(STATUS_SCALE)
         status_pos = 5.5*LEFT + 3*UP
-        string_mobject = Text('String: ' + ' '.join(string))
+        string_text = ['String \\rightarrow [']
+        string_text.extend([x.replace('$', '\\$') for x in string])
+        string_text.append(']')
+        print(string_text)
+        string_mobject = Tex(*string_text)
+        string_mobject.arrange(RIGHT, buff=0.25)
         string_pos = 0*LEFT + 3.5*DOWN
         string_mobject.move_to(string_pos)
-        string_mobject.scale(0.5)
+        string_mobject[1].set_color(RED)
+        string_mobject.scale(STRING_SCALE)
         status_mobject.move_to(status_pos)
+        self.add(status_mobject)
+        self.add(string_mobject)
         while True:
             top = stack[-1]
             a = string[0]
             entry = p.parsing_table.at[top, (ACTION, a)]
             if old_stack_mobject is None:
                 old_stack_mobject = StackMobject(stack)
+                self.add(old_stack_mobject)
             if entry == ERROR:
                 # TODO: Get better error messages here
                 raise ValueError('Parsing error. Got ERROR entry for top = {}, a = {}'.format(top, a))
@@ -65,10 +77,11 @@ class LRParsingVisualizer(Scene):
                 stack.append(int(entry[1:]))
                 string.pop(0)
                 # Starting Animation 
-                new_status_mobject=Tex('SHIFT \\; {}'.format(int(entry[1:])))
+                new_status_mobject=Text('SHIFT {}'.format(int(entry[1:])))
                 new_status_mobject.move_to(status_pos)
-                self.play(ShowCreationThenDestructionAround(status_mobject))
+                new_status_mobject.scale(STATUS_SCALE)
                 self.play(Transform(status_mobject, new_status_mobject))
+                self.play(ShowCreationThenDestructionAround(new_status_mobject))
                 self.wait(1)
                 self.remove(new_status_mobject)
                 all_anims = []
@@ -76,6 +89,14 @@ class LRParsingVisualizer(Scene):
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                             p.grammar))
+                string_text = ['String \\rightarrow [']
+                string_text.extend([x.replace('$', '\\$') for x in string])
+                string_text.append(']')
+                new_string_mobject = Tex(*string_text)
+                new_string_mobject.arrange(RIGHT, buff=0.25)
+                new_string_mobject[1].set_color(RED)
+                new_string_mobject.move_to(string_pos)
+                new_string_mobject.scale(STRING_SCALE)
                 if prev_mobject is not None:
                     anim_t = transform_graphviz_graphs(prev_mobject, \
                             curr_mobject)
@@ -83,9 +104,11 @@ class LRParsingVisualizer(Scene):
                     anim_t = [ShowCreation(curr_mobject)]
                 all_anims.extend(anim_s)
                 all_anims.extend(anim_t)
+                all_anims.append(Transform(string_mobject, new_string_mobject))
                 self.play(*all_anims)
                 self.wait(1)
                 self.remove(old_stack_mobject)
+                self.remove(new_string_mobject)
                 if prev_mobject is not None:
                     self.remove(prev_mobject)
                 old_stack_mobject = curr_stack_mobject
@@ -117,8 +140,9 @@ class LRParsingVisualizer(Scene):
                     prod_text += ' {}'.format(' '.join(prod.rhs))
                 new_status_mobject = Tex(prod_text)
                 new_status_mobject.move_to(status_pos)
-                self.play(ShowCreationThenDestructionAround(status_mobject))
+                new_status_mobject.scale(STATUS_SCALE)
                 self.play(Transform(status_mobject, new_status_mobject))
+                self.play(ShowCreationThenDestructionAround(new_status_mobject))
                 # self.play(Transform(status_mobject, \
                 #        new_status_mobject))
                 self.wait(1)
@@ -182,22 +206,22 @@ class LRParsingVisualizer(Scene):
                 new_status_mobject = Tex("ACCEPT")
                 new_status_mobject.move_to(status_pos)
                 new_status_mobject.set_color(YELLOW)
-                self.play(ShowCreationThenDestructionAround(status_mobject))
+                new_status_mobject.scale(STATUS_SCALE)
                 self.play(Transform(status_mobject, new_status_mobject))
+                self.play(ShowCreationThenDestructionAround(new_status_mobject))
                 self.remove(new_status_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                         p.grammar))
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
+                new_string_mobject = Tex('String \\rightarrow [', ']')
+                new_string_mobject.move_to(string_pos)
+                new_string_mobject.scale(STRING_SCALE)
+                anims.append(Transform(string_mobject, new_string_mobject))
+                anims.append(FadeOut(string_mobject))
                 self.play(*anims)
-
                 break 
             else:
                 raise ValueError('Unknown error while parsing')
-            new_string_mobject = Text('String: ' + ' '.join(string))
-            new_string_mobject.move_to(string_pos)
-            new_string_mobject.scale(0.5)
-            self.play(Transform(string_mobject, new_string_mobject))
-            self.remove(new_string_mobject)
         return 
 
 
@@ -214,6 +238,6 @@ if __name__ == '__main__':
     bme.construct()
     """
     vis = LRParsingVisualizer()
-    # vis.setup('expression-grammar.txt', 'id + id / id - ( id + id )')
-    vis.setup('expression-grammar.txt', 'id + id')
+    vis.setup('expression-grammar.txt', 'id + id / id - ( id + id )')
+    # vis.setup('expression-grammar.txt', 'id + id')
     vis.construct()

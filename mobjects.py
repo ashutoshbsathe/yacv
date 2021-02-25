@@ -6,7 +6,7 @@ from grammar import *
 from ll1 import *
 from lr import *
 MAX_AST_WIDTH  = 10
-MAX_AST_HEIGHT = 7
+MAX_AST_HEIGHT = 6.5
 MAX_STACK_VIS = 6
 TEXT_SCALE = 0.5
 class GraphvizMobject(VGroup):
@@ -397,11 +397,13 @@ class StackMobject(VGroup):
                 self.add(new_mobject)
                 prev_mobject = new_mobject
                 self.elements[start_idx + i] = new_mobject 
+        prev_mobject.set_color(RED)
         self.arrow = Tex('\\downarrow')
         self.arrow.next_to(prev_mobject, UP)
+        self.arrow.set_color(RED)
         self.add(self.arrow)
 
-        self.indicator = Text('Stack')
+        self.indicator = Tex('Stack')
         self.indicator.next_to(self.bottom, DOWN)
         self.indicator.scale(TEXT_SCALE)
         self.add(self.indicator)
@@ -423,8 +425,10 @@ def transform_stacks(old, new):
 
     for i in new_idx:
         anims.append(FadeIn(new.elements[i]))
+    min_idx = min(old.elements.keys())
     for i in new_idx:
-        anims.append(Flash(new.elements[i], color=GREEN))
+        if i > min_idx:
+            anims.append(Flash(new.elements[i], color=GREEN))
     anims.append(ReplacementTransform(old.arrow, new.arrow))
     anims.append(ReplacementTransform(old.indicator, new.indicator))
     return anims
