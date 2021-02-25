@@ -1,7 +1,9 @@
 try:
     from manimlib import *
+    manimce = False 
 except ImportError as e:
     from manim import *
+    manimce = True
 import numpy as np 
 import pygraphviz as pgv
 from abstractsyntaxtree import AbstractSyntaxTree
@@ -15,18 +17,18 @@ TEXT_SCALE = 0.5
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):
-        digest_config(self, kwargs, locals())
+        # digest_config doesn't work in CE
+        # digest_config(self, kwargs, locals())
         super().__init__(**kwargs)
         self.new_bbox = None
         self.scale_x = None
         self.scale_y = None 
-        self.graph = graph
-        x, y, l, w = self.graph.graph_attr['bb'].split(',')
+        x, y, l, w = graph.graph_attr['bb'].split(',')
         self.bounding_box = [float(x), float(y), float(l), float(w)]
         self.nodes = {}
         self.edges = {}
         self.graph_added = False 
-        self.add_graph() 
+        self.add_graph(graph) 
 
     # Manim grid is only 14x8, we need to fit the graphviz graph in this
     def gridify(self, x, y):
@@ -77,13 +79,15 @@ class GraphvizMobject(VGroup):
     def coord(self, x, y, z=0):
         return np.array([x, y, z])
 
-    def add_graph(self):
+    def add_graph(self, graph):
         if self.graph_added:
             # TODO: warn the user about already added graph via loggers
             return
-        g = self.graph 
+        # g = self.graph 
+        g = graph
         for n in g.nodes():
-            label = n.attr['label'].replace('&#x3B5;', '\epsilon')
+            replacement = '$\\epsilon$' if manimce else '\\epsilon'
+            label = n.attr['label'].replace('&#x3B5;', replacement)
             dot = Tex('{{' + label + '}}')
             x, y = n.attr['pos'].split(',')
             print(label)
@@ -122,8 +126,15 @@ def transform_graphviz_graphs(old, new):
     anims = []
 
     def is_equiv_vertices(n):
-        return int(n) < 0 or old.graph.get_node(n).attr['label'][0] == \
-                new.graph.get_node(n).attr['label'][0] 
+        # return int(n) < 0 or old.graph.get_node(n).attr['label'][0] == \
+        #         new.graph.get_node(n).attr['label'][0] 
+        # manimce does not strip the extra {{ }} from the latex
+        if manimce:
+            return int(n) < 0 or old.nodes[n].tex_string[2] == \
+                new.nodes[n].tex_string[2]
+        else:
+            return int(n) < 0 or old.nodes[n].tex_string[0] == \
+                new.nodes[n].tex_string[0]
 
     for n in list(common_nodes):
         if is_equiv_vertices(n):
@@ -360,7 +371,8 @@ def coord(x, y, z=0):
 
 class StackMobject(VGroup):
     def __init__(self, stack=None, **kwargs):
-        digest_config(self, kwargs, locals())
+        # digest_config doesn't work in CE
+        # digest_config(self, kwargs, locals())
         super().__init__(**kwargs)
         bottom_line = Line(start=[-6, -3, 0], end=[-5, -3, 0])
         left_line = Line(start=[-6, -3, 0], end=[-6, 2, 0])
@@ -401,7 +413,7 @@ class StackMobject(VGroup):
                 prev_mobject = new_mobject
                 self.elements[start_idx + i] = new_mobject 
         prev_mobject.set_color(RED)
-        self.arrow = Tex('$\\downarrow$')
+        self.arrow = Tex('$\\downarrow$') if manimce else Tex('\\downarrow')
         self.arrow.next_to(prev_mobject, UP)
         self.arrow.set_color(RED)
         self.add(self.arrow)

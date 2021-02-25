@@ -3,8 +3,10 @@ import sys
 sys.path.append('/home/ashutosh/parser-vis/')
 try:
     from manimlib import *
+    manimce = False 
 except ImportError as e:
     from manim import *
+    manimce = True 
 import pygraphviz as pgv
 import numpy as np
 from ll1 import *
@@ -14,10 +16,11 @@ import argparse
 from copy import deepcopy
 STATUS_SCALE = 0.6
 STRING_SCALE = 0.5
+STRING_LEADER='String $\\rightarrow$ [' if manimce else 'String \\rightarrow ['
 manim_args = {}
 
 class LRParsingVisualizer(Scene):
-    def setup(self, grammar='expression-grammar.txt', string='id + id / id - ( id + id )', **kwargs):
+    def setup(self, grammar='ll1-expression-grammar.txt', string='id', **kwargs):
         # Add a parser type argument here in the future
         self.grammar = grammar 
         if isinstance(string, str):
@@ -41,7 +44,7 @@ class LRParsingVisualizer(Scene):
         status_mobject  = Text('START')
         status_mobject.scale(STATUS_SCALE)
         status_pos = 5.5*LEFT + 3*UP
-        string_text = ['String $\\rightarrow$ [']
+        string_text = [STRING_LEADER]
         string_text.extend([x.replace('$', '\\$') for x in string])
         string_text.append(']')
         print(string_text)
@@ -92,7 +95,7 @@ class LRParsingVisualizer(Scene):
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                             p.grammar))
-                string_text = ['String $\\rightarrow$ [']
+                string_text = [STRING_LEADER]
                 string_text.extend([x.replace('$', '\\$') for x in string])
                 string_text.append(']')
                 new_string_mobject = Tex(*string_text)
@@ -136,9 +139,12 @@ class LRParsingVisualizer(Scene):
                 self.play(*anims)
                 self.wait(1) 
                 
-                prod_text = '{} $\\rightarrow$'.format(prod.lhs)
+                if manimce:
+                    prod_text = '{} $\\rightarrow$'.format(prod.lhs)
+                else:
+                    prod_text = '{} \\rightarrow'.format(prod.lhs)
                 if prod.rhs[0] == EPSILON:
-                    prod_text += ' \\epsilon'
+                    prod_text += ' $\\epsilon$' if manimce else ' \\epsilon'
                 else:
                     prod_text += ' {}'.format(' '.join(prod.rhs))
                 new_status_mobject = Tex(prod_text)
@@ -216,7 +222,7 @@ class LRParsingVisualizer(Scene):
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                         p.grammar))
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
-                new_string_mobject = Tex('String $\\rightarrow$ [', ']')
+                new_string_mobject = Tex(STRING_LEADER, ']')
                 new_string_mobject.move_to(string_pos)
                 new_string_mobject.scale(STRING_SCALE)
                 anims.append(Transform(string_mobject, new_string_mobject))
