@@ -1,4 +1,7 @@
-from manimlib import *
+try:
+    from manimlib import *
+except ImportError as e:
+    from manim import *
 import numpy as np 
 import pygraphviz as pgv
 from abstractsyntaxtree import AbstractSyntaxTree
@@ -297,7 +300,7 @@ class Grid(VGroup):
                 [self.width / 2., y - self.height / 2., 0]
             ))
 
-
+"""
 class ScreenGrid(VGroup):
     CONFIG = {
         "rows": 8,
@@ -351,7 +354,7 @@ class ScreenGrid(VGroup):
                     labels.add(label)
 
         self.add(grid, axes, labels)
-
+"""
 def coord(x, y, z=0):
     return np.array([x, y, z])
 
@@ -398,7 +401,7 @@ class StackMobject(VGroup):
                 prev_mobject = new_mobject
                 self.elements[start_idx + i] = new_mobject 
         prev_mobject.set_color(RED)
-        self.arrow = Tex('\\downarrow')
+        self.arrow = Tex('$\\downarrow$')
         self.arrow.next_to(prev_mobject, UP)
         self.arrow.set_color(RED)
         self.add(self.arrow)

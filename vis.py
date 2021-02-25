@@ -1,7 +1,10 @@
 # only for being able to run via `manimgl`
 import sys
 sys.path.append('/home/ashutosh/parser-vis/')
-from manimlib import *
+try:
+    from manimlib import *
+except ImportError as e:
+    from manim import *
 import pygraphviz as pgv
 import numpy as np
 from ll1 import *
@@ -38,7 +41,7 @@ class LRParsingVisualizer(Scene):
         status_mobject  = Text('START')
         status_mobject.scale(STATUS_SCALE)
         status_pos = 5.5*LEFT + 3*UP
-        string_text = ['String \\rightarrow [']
+        string_text = ['String $\\rightarrow$ [']
         string_text.extend([x.replace('$', '\\$') for x in string])
         string_text.append(']')
         print(string_text)
@@ -89,7 +92,7 @@ class LRParsingVisualizer(Scene):
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                             p.grammar))
-                string_text = ['String \\rightarrow [']
+                string_text = ['String $\\rightarrow$ [']
                 string_text.extend([x.replace('$', '\\$') for x in string])
                 string_text.append(']')
                 new_string_mobject = Tex(*string_text)
@@ -133,7 +136,7 @@ class LRParsingVisualizer(Scene):
                 self.play(*anims)
                 self.wait(1) 
                 
-                prod_text = '{} \\rightarrow'.format(prod.lhs)
+                prod_text = '{} $\\rightarrow$'.format(prod.lhs)
                 if prod.rhs[0] == EPSILON:
                     prod_text += ' \\epsilon'
                 else:
@@ -213,7 +216,7 @@ class LRParsingVisualizer(Scene):
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                         p.grammar))
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
-                new_string_mobject = Tex('String \\rightarrow [', ']')
+                new_string_mobject = Tex('String $\\rightarrow$ [', ']')
                 new_string_mobject.move_to(string_pos)
                 new_string_mobject.scale(STRING_SCALE)
                 anims.append(Transform(string_mobject, new_string_mobject))
