@@ -19,8 +19,118 @@ STRING_SCALE = 0.5
 STRING_LEADER='String $\\rightarrow$ [' if manimce else 'String \\rightarrow ['
 manim_args = {}
 
+class LL1ParsingVisualizer(Scene):
+    def setup(self,grammar='ll1-expression-grammar.txt',string='id + id * id  - id',**kwargs):
+        # Add a parser type argument here in the future
+        self.grammar = grammar 
+        if isinstance(string, str):
+            string = string.split(' ')
+            string = [x for x in string if x]
+        if string[-1] != '$':
+            string.append('$')
+        self.string = string 
+        super().setup(**kwargs)
+
+    def construct(self):
+        # grid = ScreenGrid()
+        # self.add(grid)
+        p = LL1Parser(self.grammar)
+        string = self.string 
+        tree = AbstractSyntaxTree('S\'')
+        curr_node_id = 0 # Assigning the node ids as we build the tree 
+        tree.node_id = curr_node_id 
+        curr_node_id += 1
+        stack = [tree]
+        popped_stack = []
+
+        old_stack_mobject = StackMobject(stack)
+        prev_mobject = None 
+        curr_mobject = None 
+        status_mobject  = Text('START')
+        status_mobject.scale(STATUS_SCALE)
+        status_pos = 5.5*LEFT + 3*UP
+        string_text = [STRING_LEADER]
+        string_text.extend([x.replace('$', '\\$') for x in string])
+        string_text.append(']')
+        string_mobject = Tex(*string_text)
+        string_mobject.arrange(RIGHT, buff=0.25)
+        string_pos = 0*LEFT + 3.5*DOWN
+        string_mobject.move_to(string_pos)
+        string_mobject[1].set_color(RED)
+        string_mobject.scale(STRING_SCALE)
+        status_mobject.move_to(status_pos)
+
+        self.add(status_mobject)
+        self.add(string_mobject)
+        self.add(old_stack_mobject)
+        # Assigning the stack top to a variable loses the tree ref 
+        # https://stackoverflow.com/questions/986006/how-do-i-pass-a-variable-by-reference
+        while stack[-1].root != '$' and stack[-1].root != '\\$':
+            a = string[0]
+            if a == '\\$':
+                a = '$'
+            if stack[-1].root == a:
+                popped_stack.append(stack.pop(-1))
+                a = string.pop(0)
+            elif stack[-1].root in p.grammar.terminals:
+                raise ValueError('Error because top = {}, terminal'.format(stack[-1].root))
+            elif p.parsing_table.at[stack[-1].root.replace('\\$', '$'), a] ==\
+                    ERROR:
+                raise ValueError('Error entry in the parsing table for top = {}, a = {}'.format(stack[-1].root, a))
+            elif p.parsing_table.at[stack[-1].root.replace('\\$', '$'), a] !=\
+                    ACCEPT:
+                prod = p.parsing_table.at[stack[-1].root, a][0]
+                print(prod)
+                stack[-1].prod_id = p.grammar.prods.index(prod)
+                desc_list = []
+                for symbol in prod.rhs:
+                    symbol = symbol.replace('$', '\\$')
+                    x = AbstractSyntaxTree(symbol)
+                    x.node_id = curr_node_id 
+                    curr_node_id += 1
+                    stack[-1].desc.append(x)
+                    desc_list.append(x)
+                popped_stack.append(stack.pop(-1))
+                if prod.rhs[0] != EPSILON:
+                    for i in range(len(desc_list)-1,-1,-1):
+                        stack.append(desc_list[i])
+            # Starting Animations
+            all_anims = []
+            string_text = [STRING_LEADER]
+            string_text.extend([x.replace('$', '\\$') for x in string])
+            string_text.append(']')
+            print(string_text)
+            new_string_mobject = Tex(*string_text)
+            new_string_mobject.arrange(RIGHT, buff=0.25)
+            new_string_mobject[1].set_color(RED)
+            new_string_mobject.move_to(string_pos)
+            new_string_mobject.scale(STRING_SCALE)
+            curr_stack_mobject = StackMobject(stack)
+            anim_s = transform_stacks(old_stack_mobject, curr_stack_mobject)
+            curr_mobject = GraphvizMobject(stack_to_graphviz([popped_stack[0]]\
+                    , p.grammar))
+            if prev_mobject is not None:
+                anim_t = transform_graphviz_graphs(prev_mobject, curr_mobject)
+            else:
+                anim_t = [ShowCreation(curr_mobject)]
+            all_anims.extend(anim_t)
+            all_anims.extend(anim_s)
+            all_anims.append(Transform(string_mobject, new_string_mobject))
+            self.play(*all_anims)
+            self.wait(1)
+            self.remove(old_stack_mobject)
+            self.remove(new_string_mobject)
+            if prev_mobject is not None:
+                self.remove(prev_mobject)
+            old_stack_mobject = curr_stack_mobject
+            prev_mobject = curr_mobject 
+            # Ending Animations 
+            print(popped_stack)
+        return 
+
+
 class LRParsingVisualizer(Scene):
-    def setup(self, grammar='ll1-expression-grammar.txt', string='id', **kwargs):
+    def setup(self, grammar='expression-grammar.txt', string='id', **kwargs):
         # Add a parser type argument here in the future
         self.grammar = grammar 
         if isinstance(string, str):
@@ -247,7 +357,12 @@ if __name__ == '__main__':
     bme.setup()
     bme.construct()
     """
+    """
     vis = LRParsingVisualizer()
     vis.setup('expression-grammar.txt', 'id + id / id - ( id + id )')
     # vis.setup('expression-grammar.txt', 'id + id')
+    vis.construct()
+    """
+    vis = LL1ParsingVisualizer()
+    vis.setup('ll1-expression-grammar.txt', 'id + id / id - id')
     vis.construct()
