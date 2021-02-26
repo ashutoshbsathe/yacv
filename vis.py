@@ -14,11 +14,44 @@ from lr import *
 from mobjects import *
 import argparse
 from copy import deepcopy
+import colour
 STATUS_SCALE = 0.6
 STRING_SCALE = 0.5
 STRING_LEADER = '\\textbf{String} $\\rightarrow$ [' if manimce else \
                 'String \\rightarrow ['
-manim_args = {}
+manim_config = {
+    'camera_config': {
+        'background_color': colour.Color('#000'),
+        'frame_rate': 60,
+        'pixel_height': 720,
+        'pixel_width': 1280
+    },
+    'end_at_animation_number': None,
+    'file_writer_config': {
+        'break_into_partial_movies': False,
+        'file_name': 'ParsingVis',
+        'input_file_path': None,
+        'mirror_module_path': False,
+        'movie_file_extension': '.mp4',
+        'open_file_upon_completion': True,
+        'output_directory': '/home/ashutosh/parser-vis/',
+        'png_mode': 'RGB',
+        'quiet': False,
+        'save_last_frame': False,
+        'save_pngs': False,
+        'show_file_location_upon_completion': True,
+        'write_to_movie': True
+    },
+    'leave_progress_bars': True,
+    'module': None,
+    'preview': False,
+    'quiet': False,
+    'scene_names': None,
+    'skip_animations': False,
+    'start_at_animation_number': None,
+    'window_config': None,
+    'write_all': False
+}
 
 def prepare_text(x):
     if manimce:
@@ -27,7 +60,10 @@ def prepare_text(x):
         return x.replace('$', '\\$')
 
 class LL1ParsingVisualizer(Scene):
-    def setup(self,grammar='ll1-expression-grammar.txt',string='id + id * id  - id',**kwargs):
+    def setup(self,grammar='ll1-expression-grammar.txt',string='id',**kwargs):
+        if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
+            super().setup(**kwargs)
+            return
         # Add a parser type argument here in the future
         self.grammar = grammar 
         if isinstance(string, str):
@@ -36,6 +72,7 @@ class LL1ParsingVisualizer(Scene):
         if string[-1] != '$':
             string.append('$')
         self.string = string 
+        self.grammar_setup_done = True
         super().setup(**kwargs)
 
     def construct(self):
@@ -165,6 +202,9 @@ class LL1ParsingVisualizer(Scene):
 
 class LRParsingVisualizer(Scene):
     def setup(self, grammar='expression-grammar.txt', string='id', **kwargs):
+        if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
+            super().setup(**kwargs)
+            return
         # Add a parser type argument here in the future
         self.grammar = grammar 
         if isinstance(string, str):
@@ -172,7 +212,8 @@ class LRParsingVisualizer(Scene):
             string = [x for x in string if x]
         if string[-1] != '$':
             string.append('$')
-        self.string = string 
+        self.string = string
+        self.grammar_setup_done = True
         super().setup(**kwargs)
 
     def construct(self):
@@ -391,12 +432,15 @@ if __name__ == '__main__':
     bme.setup()
     bme.construct()
     """
-    """
-    vis = LRParsingVisualizer()
-    vis.setup('expression-grammar.txt', 'id + id / id - ( id + id )')
+    vis = LRParsingVisualizer(**manim_config)
+    vis.setup('expression-grammar.txt', 'id')
     # vis.setup('expression-grammar.txt', 'id + id')
-    vis.construct()
+    if manimce:
+        vis.render()
+    else:
+        vis.run()
     """
-    vis = LL1ParsingVisualizer()
-    vis.setup('ll1-expression-grammar.txt', 'id + id / id - id')
-    vis.construct()
+    vis = LL1ParsingVisualizer(**manim_config)
+    vis.setup('ll1-expression-grammar.txt', 'id')
+    vis.run()
+    """
