@@ -14,6 +14,11 @@ MAX_AST_WIDTH  = 10
 MAX_AST_HEIGHT = 6.5
 MAX_STACK_VIS = 6
 TEXT_SCALE = 0.5
+def prepare_text(x):
+    if manimce:
+        return '\\textbf{' + x.replace('$', '\\$') if '\\$' not in x else x + '}'
+    else:
+        return x.replace('$', '\\$') if '\\$' not in x else x
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):
@@ -87,7 +92,8 @@ class GraphvizMobject(VGroup):
         g = graph
         for n in g.nodes():
             replacement = '$\\epsilon$' if manimce else '\\epsilon'
-            label = n.attr['label'].replace('&#x3B5;', replacement)
+            label = prepare_text(n.attr['label'])
+            label = label.replace('&#x3B5;', replacement)
             dot = Tex('{{' + label + '}}')
             x, y = n.attr['pos'].split(',')
             print(label)
@@ -406,7 +412,7 @@ class StackMobject(VGroup):
                     text = elem.root 
                 else:
                     text = str(elem) 
-                new_mobject = Tex(text)
+                new_mobject = Tex(prepare_text(text))
                 new_mobject.next_to(prev_mobject, UP)
                 new_mobject.scale(TEXT_SCALE)
                 self.add(new_mobject)

@@ -16,8 +16,15 @@ import argparse
 from copy import deepcopy
 STATUS_SCALE = 0.6
 STRING_SCALE = 0.5
-STRING_LEADER='String $\\rightarrow$ [' if manimce else 'String \\rightarrow ['
+STRING_LEADER = '\\textbf{String} $\\rightarrow$ [' if manimce else \
+                'String \\rightarrow ['
 manim_args = {}
+
+def prepare_text(x):
+    if manimce:
+        return '\\textbf{' + x.replace('$', '\\$') + '}'
+    else:
+        return x.replace('$', '\\$')
 
 class LL1ParsingVisualizer(Scene):
     def setup(self,grammar='ll1-expression-grammar.txt',string='id + id * id  - id',**kwargs):
@@ -50,7 +57,7 @@ class LL1ParsingVisualizer(Scene):
         status_mobject.scale(STATUS_SCALE)
         status_pos = 5.5*LEFT + 3*UP
         string_text = [STRING_LEADER]
-        string_text.extend([x.replace('$', '\\$') for x in string])
+        string_text.extend([prepare_text(x) for x in string])
         string_text.append(']')
         string_mobject = Tex(*string_text)
         string_mobject.arrange(RIGHT, buff=0.25)
@@ -116,7 +123,7 @@ class LL1ParsingVisualizer(Scene):
             # Starting Animations
             all_anims = []
             string_text = [STRING_LEADER]
-            string_text.extend([x.replace('$', '\\$') for x in string])
+            string_text.extend([prepare_text(x) for x in string])
             string_text.append(']')
             print(string_text)
             new_string_mobject = Tex(*string_text)
@@ -171,7 +178,7 @@ class LRParsingVisualizer(Scene):
     def construct(self):
         # grid = ScreenGrid()
         # self.add(grid)
-        p = LR1Parser(self.grammar)
+        p = LALR1Parser(self.grammar)
         string = self.string 
         stack = [0]
         old_stack_mobject = None
@@ -182,7 +189,7 @@ class LRParsingVisualizer(Scene):
         status_mobject.scale(STATUS_SCALE)
         status_pos = 5.5*LEFT + 3*UP
         string_text = [STRING_LEADER]
-        string_text.extend([x.replace('$', '\\$') for x in string])
+        string_text.extend([prepare_text(x) for x in string])
         string_text.append(']')
         print(string_text)
         string_mobject = Tex(*string_text)
@@ -233,7 +240,7 @@ class LRParsingVisualizer(Scene):
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                             p.grammar))
                 string_text = [STRING_LEADER]
-                string_text.extend([x.replace('$', '\\$') for x in string])
+                string_text.extend([prepare_text(x) for x in string])
                 string_text.append(']')
                 new_string_mobject = Tex(*string_text)
                 new_string_mobject.arrange(RIGHT, buff=0.25)
