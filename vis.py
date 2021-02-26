@@ -19,6 +19,56 @@ STATUS_SCALE = 0.6
 STRING_SCALE = 0.5
 STRING_LEADER = '\\textbf{String} $\\rightarrow$ [' if manimce else \
                 'String \\rightarrow ['
+class ManimCEConfigArgs(object):
+    def __init__(self, adict):
+        self.__dict__.update(adict)
+
+manimce_config =  {
+    'assets_dir': './',
+    'background_color': colour.Color('#000'),
+    'background_opacity': 1.0,
+    'custom_folders': False,
+    'disable_caching': False,
+    'ffmpeg_loglevel': 'ERROR',
+    'flush_cache': False,
+    'frame_height': 8.0,
+    'frame_rate': 15,
+    'frame_width': 14.222222222222221,
+    'from_animation_number': 0,
+    'images_dir': '{media_dir}/images/{module_name}',
+    'input_file': '/home/ashutosh/parser-vis/vis.py',
+    'leave_progress_bars': False,
+    'log_dir': '{media_dir}/logs',
+    'log_to_file': False,
+    'max_files_cached': 100,
+    'media_dir': './media',
+    'movie_file_extension': '.mp4',
+    'output_file': 'ParsingVis',
+    'partial_movie_dir': '{video_dir}/partial_movie_files/{scene_name}',
+    'pixel_height': 720,
+    'pixel_width': 1280,
+    'plugins': [],
+    'png_mode': 'RGB',
+    'preview': False,
+    'progress_bar': True,
+    'save_as_gif': False,
+    'save_last_frame': False,
+    'save_pngs': False,
+    'scene_names': None,
+    'show_in_file_browser': False,
+    'sound': False,
+    'tex_dir': '{media_dir}/Tex',
+    'tex_template_file': None,
+    'text_dir': '{media_dir}/texts',
+    'upto_animation_number': float('inf'),
+    'use_webgl_renderer': False,
+    'verbosity': 'INFO',
+    'video_dir': '{media_dir}/videos/{module_name}/{quality}',
+    'webgl_renderer_path': '',
+    'webgl_updater_fps': 15,
+    'write_all': False,
+    'write_to_movie': True
+}
 manim_config = {
     'camera_config': {
         'background_color': colour.Color('#000'),
@@ -432,7 +482,15 @@ if __name__ == '__main__':
     bme.setup()
     bme.construct()
     """
-    vis = LRParsingVisualizer(**manim_config)
+    if manimce:
+        from manim import config 
+        pprint(manimce_config)
+        for k, v in manimce_config.items():
+            print('Set {} = {}'.format(k, v))
+            config[k] = v
+        vis = LRParsingVisualizer()
+    else:
+        vis = LRParsingVisualizer(**manim_config)
     vis.setup('expression-grammar.txt', 'id')
     # vis.setup('expression-grammar.txt', 'id + id')
     if manimce:
