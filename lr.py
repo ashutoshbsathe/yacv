@@ -574,15 +574,80 @@ class LR1Parser(LRParser):
         self.parsing_table_built = True
         self.parsing_table.to_csv('parsing_table.csv')
 
+class LALR1Parser(LR1Parser): 
+    def build_automaton(self):
+        if self.automaton_built:
+            # TODO: Warn user
+            return
+        init = LRAutomatonState(self.closure(LRItem(
+            self.grammar.prods[0], 0, ['$'])))
+        self.build_automaton_from_init(init)
+
+        def get_core(state):
+            core = ''
+            for item in state.items:
+                core += str(LRItem(item.production, item.dot_pos)) + '\n'
+            return core 
+
+        state_core_dict = OrderedDict()
+        state_id = 0
+        for i, state in enumerate(self.automaton_states):
+            core = get_core(state)
+            if core not in state_core_dict.keys():
+                state_core_dict[core] = {
+                    "state_id" : state_id,
+                    "state_list" : []
+                }
+                state_id += 1
+            state_core_dict[core]['state_list'].append(i)
+        pprint(state_core_dict)
+        pprint(len(state_core_dict.keys()))
+        new_states = []
+        for key, info in state_core_dict.items():
+            states = info['state_list']
+            if len(states) == 1:
+                new_states.append(self.automaton_states[states[0]])
+                continue 
+            new_state = self.automaton_states[states[0]]
+            for i, state_id in enumerate(states[1:]):
+                state = self.automaton_states[state_id]
+                for j, item in enumerate(state.items):
+                    assert new_state.items[j].production == item.production
+                    assert new_state.items[j].dot_pos == item.dot_pos 
+                    lookaheads = set(new_state.items[j].lookaheads)
+                    lookaheads = lookaheads.union(set(item.lookaheads))
+                    new_state.items[j].lookaheads = sorted(list(lookaheads))
+            new_states.append(new_state)
+        for state in new_states:
+            print(str(state))
+            print(64*'-')
+        pprint(len(new_states))
+        new_automaton_transitions = OrderedDict()
+        for state_id, info in self.automaton_transitions.items():
+            core = get_core(self.automaton_states[state_id])
+            curr_state_id = state_core_dict[core]['state_id']
+            if curr_state_id not in new_automaton_transitions.keys():
+                new_automaton_transitions[curr_state_id] = OrderedDict()
+            for symbol, new_state_id in info.items():
+                core = get_core(self.automaton_states[new_state_id])
+                next_state_id = state_core_dict[core]['state_id']
+                new_automaton_transitions[curr_state_id][symbol] = \
+                        next_state_id 
+        pprint(self.automaton_transitions)
+        pprint(new_automaton_transitions)
+        self.automaton_states = new_states 
+        self.automaton_transitions = new_automaton_transitions
+        self.automaton_built = True
+
 if __name__ == '__main__':
     import sys
     if len(sys.argv) > 2:
         #lr0 = LR0Parser(sys.argv[1])
-        p = LR1Parser(sys.argv[1])
+        p = LALR1Parser(sys.argv[1])
         string = sys.argv[2]
     else:
         #lr0 = LR0Parser()
-        p = LR1Parser()
+        p = LALR1Parser()
         string = sys.argv[1]
     p.visualize_automaton()
     # string = 'id + id * ( id / id / id * id ) - id'
