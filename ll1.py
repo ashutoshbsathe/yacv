@@ -1,30 +1,10 @@
-from grammar import Grammar, first, EPSILON
+from grammar import Grammar, first
 import pandas as pd
 from pprint import pprint
 from abstractsyntaxtree import AbstractSyntaxTree
 import random
+from constants import *
 
-ERROR = ''
-ACCEPT = 'ACC'
-INFINITY = 2048
-COLORS = [
-    '#FF7F50', # 'coral',
-    '#8B008B', # 'darkmagenta',
-    '#006400', # 'darkblue',
-    '#8B0000', # 'darkred',
-    '#FF1493', # 'deeppink',
-    '#1E90FF', # 'dodgerblue',
-    '#8A2BE2', # 'blueviolet',
-    '#008B8B', # 'darkcyan',
-    '#FFFF00', # 'yellow',
-    '#191970', # 'mediumslateblue',
-    '#A52A2A', # 'brown',
-    '#FFA500', # 'orange',
-    '#008080', # 'teal',
-    '#2E8B57', # 'seagreen',
-    '#00FF7F', # 'springgreen',
-    '#FF6347', # 'tomato'
-]
 class LL1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
         self.grammar = Grammar(fname)

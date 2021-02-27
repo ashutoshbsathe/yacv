@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from pprint import pprint
-EPSILON = ''
+from constants import *
 class Production(object):
     def __init__(self, lhs=None, rhs=[]):
         self.lhs = lhs

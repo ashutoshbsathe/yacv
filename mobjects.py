@@ -10,15 +10,8 @@ from abstractsyntaxtree import AbstractSyntaxTree
 from grammar import *
 from ll1 import *
 from lr import *
-MAX_AST_WIDTH  = 10
-MAX_AST_HEIGHT = 6.5
-MAX_STACK_VIS = 6
-TEXT_SCALE = 0.5
-def prepare_text(x):
-    if manimce:
-        return '\\textbf{' + x.replace('$', '\\$') if '\\$' not in x else x + '}'
-    else:
-        return x.replace('$', '\\$') if '\\$' not in x else x
+from constants import *
+from utils import *
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):

@@ -1,36 +1,11 @@
-from grammar import Grammar, first, EPSILON
+from grammar import Grammar, first
 from abstractsyntaxtree import AbstractSyntaxTree
 from pprint import pprint
 from copy import deepcopy
 from collections import OrderedDict
 import pandas as pd
+from constants import *
 
-ACTION = 'ACTION'
-ACCEPT = 'ACC'
-ERROR  = ''
-GOTO   = 'GOTO'
-DOT    = '•'
-REDUCE = 'r'
-SHIFT  = 's'
-INFINITY = 2048
-COLORS = [
-    '#FF7F50', # 'coral',
-    '#8B008B', # 'darkmagenta',
-    '#006400', # 'darkblue',
-    '#8B0000', # 'darkred',
-    '#FF1493', # 'deeppink',
-    '#1E90FF', # 'dodgerblue',
-    '#8A2BE2', # 'blueviolet',
-    '#008B8B', # 'darkcyan',
-    '#FFFF00', # 'yellow',
-    '#191970', # 'mediumslateblue',
-    '#A52A2A', # 'brown',
-    '#FFA500', # 'orange',
-    '#008080', # 'teal',
-    '#2E8B57', # 'seagreen',
-    '#00FF7F', # 'springgreen',
-    '#FF6347', # 'tomato'
-]
 class LRItem(object):
     def __init__(self, production=None, dot_pos=0, lookaheads=[]):
         self.production = production
