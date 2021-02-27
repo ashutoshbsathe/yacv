@@ -9,6 +9,9 @@ import os
 from rich.traceback import install
 from rich.logging import RichHandler 
 
+class YACVError(Exception):
+    pass
+
 def prepare_text(x):
     if manimce:
         return '\\textbf{' + x.replace('$', '\\$') if '\\$' not in x else x \

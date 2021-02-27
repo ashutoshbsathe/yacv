@@ -5,9 +5,15 @@ from abstractsyntaxtree import AbstractSyntaxTree
 import random
 import logging 
 from constants import *
+from utils import YACVError 
 class LL1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
         self.grammar = Grammar(fname)
+        # Check for left recursion
+        for prod in self.grammar.prods:
+            if prod.lhs == prod.rhs[0]:
+                raise YACVError('The grammar is not LL(1) due to left recursion in production {}'.format(prod))
+
         self.parsing_table = pd.DataFrame(
             columns=self.grammar.terminals,
             index=self.grammar.nonterminals.keys()
@@ -34,15 +40,16 @@ class LL1Parser(object):
                         if len(self.parsing_table.at[lhs, symbol]) > 1:
                             self.is_ll1 = False
         # pprint(self.parsing_table)
-        log = logging.getLogger('yacv')
-        if not self.is_ll1:
-            log.exception('Grammar is not LL!')
-            # raise YACVInvalidGrammarError
+        if self.is_ll1:
+            logging.getLogger('yacv').info('LL(1) parsing table successfully generated')
         else:
-            log.info('LL(1) parsing table successfully generated')
+            # TODO: maybe save the parsing table for further analysis ?
+            raise YACVError('Grammar is not LL(1). 2 or more entries present in at least one cell in parsing table')
 
     def parse(self, string):
         log = logging.getLogger('yacv')
+        if not self.is_ll1:
+            log.warn('Grammar is not LL(1). The parsing may run into infinite loop')
         # string: list of terminals
         if string[-1] != '$':
             string.append('$')

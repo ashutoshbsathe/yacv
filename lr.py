@@ -5,7 +5,8 @@ from copy import deepcopy
 from collections import OrderedDict
 import pandas as pd
 from constants import *
-
+import logging
+from utils import YACVError
 class LRItem(object):
     def __init__(self, production=None, dot_pos=0, lookaheads=[]):
         self.production = production
@@ -109,26 +110,27 @@ class LRParser(object):
         self.build_parsing_table()
 
     def closure(self, i):
+        log = logging.getLogger('yacv')
         queue = i if isinstance(i, list) else [i]
         ret = []
-        print('Computing closure of {}'.format(queue))
+        log.debug('Computing closure of {}'.format(queue))
         while queue:
             item = queue.pop(0)
             assert isinstance(item, LRItem)
             ret.append(item)
-            print('item = {}, reduce = {}'.format(item, item.reduce))
+            log.debug('item = {}, reduce = {}'.format(item, item.reduce))
             if item.reduce:
                 continue
             next_symbol = item.production.rhs[item.dot_pos]
-            print('next_symbol = {}'.format(next_symbol))
+            log.debug('next_symbol = {}'.format(next_symbol))
             if next_symbol == EPSILON \
             or next_symbol in self.grammar.terminals:
                 continue
             prod_ids = self.grammar.nonterminals[next_symbol]['prods_lhs']
-            print('new_prod_ids = {}'.format(prod_ids))
+            log.debug('new_prod_ids = {}'.format(prod_ids))
             for prod_id in prod_ids:
                 prod = self.grammar.prods[prod_id]
-                print(type(item.lookaheads))
+                log.debug(type(item.lookaheads))
                 if item.lookaheads:
                     f = first(self.grammar, 
                             item.production.rhs[item.dot_pos+1:])
@@ -140,7 +142,7 @@ class LRParser(object):
                 else:
                     f = []
                 new_item = LRItem(prod, 0, f)
-                print('new_item = {}'.format(new_item))
+                log.debug('new_item = {}'.format(new_item))
                 if new_item not in queue and new_item not in ret:
                     queue.append(new_item)
         kernel_lookaheads = OrderedDict()
@@ -163,8 +165,9 @@ class LRParser(object):
         return ret
 
     def build_automaton_from_init(self, init):
+        log = logging.getLogger('yacv')
         if self.automaton_built:
-            # TODO: raise a warning here
+            log.warn('Automaton is already built!')
             return
         # init = LRAutomatonState(self.closure(LRItem(self.grammar.prods[0], 0)))
         self.automaton_states.append(init)
@@ -174,7 +177,7 @@ class LRParser(object):
         while to_visit:
             curr = to_visit.pop(0)
             curr_idx = self.automaton_states.index(curr)
-            print('curr = {}'.format(curr))
+            log.debug('curr = {}'.format(curr))
             visited_states.append(curr)
             tmp_items = deepcopy(curr.items)
             next_symbols = OrderedDict()
@@ -187,13 +190,13 @@ class LRParser(object):
                 item.dot_pos += 1
                 item.update_reduce()
                 next_symbols[key].append(item)
-            pprint(next_symbols)
+            # pprint(next_symbols)
             for key, items in next_symbols.items():
                 next_state = LRAutomatonState(self.closure(items))
-                print(next_state)
+                log.debug(next_state)
                 if next_state not in self.automaton_states:
                     # Is next_state completely new ?
-                    print('Adding new state {}'.format(next_state))
+                    log.debug('Adding new state {}'.format(next_state))
                     self.automaton_states.append(next_state)
                     self.automaton_transitions[len(self.automaton_states)-1] = \
                         OrderedDict()
@@ -203,18 +206,19 @@ class LRParser(object):
                     to_visit.append(next_state)
                 else:
                     # next_state already exists and is visited
-                    print('State {} is already visited'.format(next_state))
+                    log.debug('State {} is already visited'.format(next_state))
                 next_idx = self.automaton_states.index(next_state)
                 self.automaton_transitions[curr_idx][key] = next_idx
-                print(32 * '-')
-            print(64*'-')
-        print('to_visit = empty')
+                # print(32 * '-')
+            # print(64*'-')
+        log.debug('to_visit = empty')
         self.automaton_built = True
 
     def build_parsing_table(self):
         pass
 
     def parse(self, string):
+        log = logging.getLogger('yacv')
         # page 7 at below link is really helpful
         # https://www2.cs.duke.edu/courses/spring02/cps140/lects/sectlrparseS.pdf
         assert self.parsing_table_built
@@ -228,11 +232,11 @@ class LRParser(object):
             a = string[0]
             entry = self.parsing_table.at[top, (ACTION, a)]
             if entry == ERROR:
-                print('Parse error')
-                raise ValueError('ERROR entry for top = {}, a = {}'.format(top, a))
+                log.error('Parse error')
+                raise YACVError('ERROR entry for top = {}, a = {}'.format(top, a))
             if isinstance(entry, list):
                 entry = entry[0]
-            print('stack top = {}, a = {}, entry = {}'.format(top, a, entry))
+            log.debug('stack top = {}, a = {}, entry = {}'.format(top, a, entry))
             if entry[0] == 's':
                 stack.append(AbstractSyntaxTree(a))
                 stack.append(int(entry[1:]))
@@ -246,10 +250,10 @@ class LRParser(object):
                 if prod.rhs[0] != EPSILON:
                     for _ in range(len(prod.rhs)):
                         if not stack:
-                            raise ValueError()
+                            raise YACVError('Stack prematurely empty')
                         stack.pop(-1) # pops the state number
                         if not stack:
-                            raise ValueError()
+                            raise YACVError('Stack prematurely empty')
                         popped_list.append(stack.pop(-1)) # pops the symbol
                 else:
                     new_tree.desc.append(AbstractSyntaxTree(EPSILON))
@@ -271,18 +275,19 @@ class LRParser(object):
                 if not stack:
                     raise ValueError() # Not sure if we need this here
                 tree = stack.pop(-1)
-                print('Parse successful')
-                print('Final tree = {}'.format(tree))
+                log.info('Parse successful')
+                log.debug('Final tree = {}'.format(tree))
                 return tree
                 break
             else:
-                print('Unknown Error')
+                raise YACVError('Unknown error while parsing')
                 break
-            print(stack)
-            print(string)
-            print(64 *'-')
+            # print(stack)
+            # print(string)
+            # print(64 *'-')
 
     def visualize_syntaxtree(self, string):
+        log = logging.getLogger('yacv')
         import pygraphviz as pgv
         # Create the parse tree
         tree = self.parse(string)
@@ -302,9 +307,9 @@ class LRParser(object):
                 G.get_node(node).attr['fontcolor'] = color
             desc_ids = []
             # G.get_node(node).attr['label'] += ', {}'.format(top.prod_id)
-            pprint(top.desc)
+            # pprint(top.desc)
             for desc in top.desc:
-                pprint(desc)
+                # pprint(desc)
                 if desc.root == EPSILON:
                    label = G.get_node(node).attr['label'] 
                    label = '<' + label + ' = &#x3B5;>'
@@ -327,14 +332,14 @@ class LRParser(object):
                 visited.append(node)
                 if node.attr['label'] in terminals:
                     terminal_nodes.append(node)
-                print(node.attr['label'])
+                log.debug(node.attr['label'])
                 for i in range(len(G.successors(node))-1, -1, -1):
                     stack.append(G.successors(node)[i])
                 # stack.extend(G.successors(node))
-        print(terminal_nodes)
+        # print(terminal_nodes)
         for i, prod in enumerate(prods):
             nonterminals = []
-            print(i, prod)
+            # print(i, prod)
             for node_id in prod:
                 if G.get_node(node_id).attr['label'] in terminals:
                     continue
@@ -344,7 +349,7 @@ class LRParser(object):
             nt = G.subgraph(nonterminals, name='Production' + str(i))
             nt.graph_attr['rank'] = 'same'
             for j in range(len(nt.nodes())-1):
-                print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+                log.debug('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
                     j, nonterminals[j], j+1, nonterminals[j+1]
                 ))
                 nt.add_edge(nonterminals[j], nonterminals[j+1], \
@@ -353,7 +358,7 @@ class LRParser(object):
         t = G.add_subgraph(terminal_nodes, name='Terminals')
         t.graph_attr['rank'] = 'max'
         for i in range(len(t.nodes())-1):
-            print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+            log.debug('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
                 i, terminal_nodes[i], i+1, terminal_nodes[i+1]
             ))
             t.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
@@ -374,6 +379,7 @@ class LRParser(object):
         return G
 
     def visualize_automaton(self):
+        log = logging.getLogger('yacv')
         import pygraphviz as pgv
         G = pgv.AGraph(rankdir='LR', directed=True)
         G.add_node(-1, style='invis')
@@ -383,17 +389,17 @@ class LRParser(object):
             label = label.replace(DOT, '&#xB7;')
             label = label.replace('->', '&#10132;')
             label = '<' + label + '>'
-            print(label)
+            log.debug(label)
             if len(state.reduce_items) > 0:
                 # This is a reduce state
                 fillcolor = '#90EE90' if state.accept else '#85CAF6'
                 G.add_node(i, label=label, peripheries=2, 
                             style='filled', fillcolor=fillcolor)
-                print('Added reduce node')
+                log.debug('Added reduce node')
             else:
                 G.add_node(i, label=label)
-                print('Added node')
-            print(64*'-')
+                log.debug('Added node')
+            # print(64*'-')
         G.add_edge(-1, 0)
         for state, transitions in self.automaton_transitions.items():
             for symbol, new_state in transitions.items():
@@ -418,8 +424,12 @@ class LR0Parser(LRParser):
         self.build_automaton_from_init(init)
 
     def build_parsing_table(self):
-        # TODO: Silently return if parsing table is built ?
-        assert self.automaton_built
+        log = logging.getLogger('yacv')
+        if self.parsing_table_built:
+            log.warn('Parsing table is already built!')
+            return
+        if not self.automaton_built:
+            raise YACVError('LR state automaton must be built before building parsing table')
         terminals = self.grammar.terminals
         for state_id, transitions in self.automaton_transitions.items():
             state = self.automaton_states[state_id]
@@ -451,14 +461,22 @@ class LR0Parser(LRParser):
                 if len(self.parsing_table.at[state_id, col]) > 1:
                     self.is_valid = False
 
-        pprint(self.parsing_table)
-        print(self.is_valid)
+        # pprint(self.parsing_table)
+        # print(self.is_valid)
         self.parsing_table_built = True
+        if not self.is_valid:
+            raise YACVError('Grammar is not LR(0)')
+        else:
+            log.info('Parsing table built successfully')
 
 class SLR1Parser(LR0Parser):
     def build_parsing_table(self):
-        # TODO: Silently return if parsing table is built ?
-        assert self.automaton_built
+        log = logging.getLogger('yacv')
+        if self.parsing_table_built:
+            log.warn('Parsing table is already built!')
+            return
+        if not self.automaton_built:
+            raise YACVError('LR state automaton must be built before building parsing table')
         terminals = self.grammar.terminals
         for state_id, transitions in self.automaton_transitions.items():
             state = self.automaton_states[state_id]
@@ -492,9 +510,13 @@ class SLR1Parser(LR0Parser):
                 if len(self.parsing_table.at[state_id, col]) > 1:
                     self.is_valid = False
 
-        pprint(self.parsing_table)
-        print(self.is_valid)
+        # pprint(self.parsing_table)
+        # print(self.is_valid)
         self.parsing_table_built = True
+        if not self.is_valid:
+            raise YACVError('Grammar is not LR(0)')
+        else:
+            log.info('Parsing table built successfully')
 
 class LR1Parser(LRParser): 
     def build_automaton(self):
@@ -507,8 +529,12 @@ class LR1Parser(LRParser):
         self.automaton_built = True
 
     def build_parsing_table(self):
-        # TODO: Silently return if parsing table is built ?
-        assert self.automaton_built
+        log = logging.getLogger('yacv')
+        if self.parsing_table_built:
+            log.warn('Parsing table is already built!')
+            return 
+        if not self.automaton_built:
+            raise YACVError('LR state automaton must be built before building parsing table')
         terminals = self.grammar.terminals
         for state_id, transitions in self.automaton_transitions.items():
             state = self.automaton_states[state_id]
@@ -544,15 +570,20 @@ class LR1Parser(LRParser):
                 self.parsing_table.at[state_id, col].append(entry)
                 if len(self.parsing_table.at[state_id, col]) > 1:
                     self.is_valid = False
-        pprint(self.parsing_table)
-        print(self.is_valid)
+        # pprint(self.parsing_table)
+        # print(self.is_valid)
         self.parsing_table_built = True
         self.parsing_table.to_csv('parsing_table.csv')
+        if not self.is_valid:
+            raise YACVError('Grammar cannot be parsed by your chosen method')
+        else:
+            log.info('Parsing table built successfully')
 
 class LALR1Parser(LR1Parser): 
     def build_automaton(self):
+        log = logging.getLogger('yacv')
         if self.automaton_built:
-            # TODO: Warn user
+            log.warn('Automaton is already built!')
             return
         init = LRAutomatonState(self.closure(LRItem(
             self.grammar.prods[0], 0, ['$'])))
@@ -575,13 +606,15 @@ class LALR1Parser(LR1Parser):
                 }
                 state_id += 1
             state_core_dict[core]['state_list'].append(i)
-        pprint(state_core_dict)
-        pprint(len(state_core_dict.keys()))
+        # pprint(state_core_dict)
+        # pprint(len(state_core_dict.keys()))
         new_states = []
         for key, info in state_core_dict.items():
             states = info['state_list']
             if len(states) == 1:
                 new_states.append(self.automaton_states[states[0]])
+                new_states[-1].update_shift_reduce_items()
+                new_states[-1].update_conflicts()
                 continue 
             new_state = self.automaton_states[states[0]]
             for i, state_id in enumerate(states[1:]):
@@ -593,10 +626,14 @@ class LALR1Parser(LR1Parser):
                     lookaheads = lookaheads.union(set(item.lookaheads))
                     new_state.items[j].lookaheads = sorted(list(lookaheads))
             new_states.append(new_state)
+            new_states[-1].update_shift_reduce_items()
+            new_states[-1].update_conflicts()
+        """
         for state in new_states:
             print(str(state))
             print(64*'-')
         pprint(len(new_states))
+        """
         new_automaton_transitions = OrderedDict()
         for state_id, info in self.automaton_transitions.items():
             core = get_core(self.automaton_states[state_id])
@@ -608,14 +645,16 @@ class LALR1Parser(LR1Parser):
                 next_state_id = state_core_dict[core]['state_id']
                 new_automaton_transitions[curr_state_id][symbol] = \
                         next_state_id 
-        pprint(self.automaton_transitions)
-        pprint(new_automaton_transitions)
+        # pprint(self.automaton_transitions)
+        # pprint(new_automaton_transitions)
         self.automaton_states = new_states 
         self.automaton_transitions = new_automaton_transitions
         self.automaton_built = True
 
 if __name__ == '__main__':
     import sys
+    from utils import setup_logger
+    setup_logger()
     if len(sys.argv) > 2:
         #lr0 = LR0Parser(sys.argv[1])
         p = LALR1Parser(sys.argv[1])
@@ -625,8 +664,7 @@ if __name__ == '__main__':
         p = LALR1Parser()
         string = sys.argv[1]
     p.visualize_automaton()
-    # string = 'id + id * ( id / id / id * id ) - id'
+    string = 'id + id * ( id / id / id * id ) - id'
     string = [x.strip() for x in string.split(' ')]
-    pprint(p.grammar.nonterminals)
     p.visualize_syntaxtree(string)
     
