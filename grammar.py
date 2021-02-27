@@ -20,28 +20,6 @@ class Production(object):
     
     def __ne__(self, other):
         return not self == other
-
-class LRParserItem(object):
-    def __init__(self, production=None, dot_pos=0, lookaheads=[], lr1=True):
-        self.production = production
-        self.dot_pos = dot_pos
-        self.lookaheads = lookaheads
-        self.lr1 = lr1
-    
-    def __str__(self):
-        item = '{} -> {}•{}'.format(
-                    self.production.lhs,
-                    self.production.rhs[:self.dot_pos],
-                    self.production.rhs[self.dot_pos:],
-                )
-        if self.lr1:
-            return item + ', {}'.format(self.lookaheads)
-        else:
-            return item
-
-    def __repr__(self):
-        return str(self)
-
 def first(g, s):
     # g: Grammar object
     # s: RHS or Part of RHS as list
