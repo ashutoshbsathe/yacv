@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from pprint import pprint
 from constants import *
+import logging 
 class Production(object):
     def __init__(self, lhs=None, rhs=[]):
         self.lhs = lhs
@@ -116,12 +117,13 @@ class Grammar(object):
             self.nonterminals[nt]['first'] = tmp
 
     def build_follow(self):
+        log = logging.getLogger('yacv')
         self.nonterminals[self.prods[0].lhs]['follow'].add('$')
         for nt in self.nonterminals.keys():
             # Where does this symbol occur on RHS ?
             s = set()
             for prodno, idx in self.nonterminals[nt]['prods_rhs']:
-                print('Needed FIRST({}) = {} for FOLLOW({})'.format(
+                log.debug('Needed FIRST({}) = {} for FOLLOW({})'.format(
                     self.prods[prodno].rhs[idx+1:], 
                     first(self, self.prods[prodno].rhs[idx+1:]), 
                     nt
@@ -132,14 +134,14 @@ class Grammar(object):
                 s = s.union(f)
                 s = s.difference(set([EPSILON]))
             self.nonterminals[nt]['follow'] = s
-            print('FOLLOW({}) = {}'.format(nt, s))
+            log.debug('FOLLOW({}) = {}'.format(nt, s))
         for prod in self.prods:
-            print('At production {}'.format(prod))
+            log.debug('At production {}'.format(prod))
             # Is there a production A -> BC such that C is NULLABLE ?
             lhs, rhs = prod.lhs, prod.rhs
             reversed_rhs = rhs[::-1]
             for i, symbol in enumerate(reversed_rhs):
-                print('i = {}, symbol = {}'.format(i, symbol))
+                log.debug('i = {}, symbol = {}'.format(i, symbol))
                 if symbol not in self.nonterminals.keys():
                     break
                 if self.nonterminals[symbol]['nullable'] and (i+1) < len(rhs):
@@ -153,16 +155,14 @@ class Grammar(object):
                         s3 = self.nonterminals[symbol]['follow']
                         s3 = s3.union(s2)
                         self.nonterminals[symbol]['follow'] = s3
-                        print('Production {} has nullable symbol {} at the end, updated FOLLOW({}) = {}'.format(prod, symbol, symbol, s3))
-                    print('Production {} has nullable symbol {}, changed FOLLOW({}) to {}'.format(prod, symbol, reversed_rhs[i+1], s1))
+                        log.debug('Production {} has nullable symbol {} at the end, updated FOLLOW({}) = {}'.format(prod, symbol, symbol, s3))
+                    log.debug('Production {} has nullable symbol {}, changed FOLLOW({}) to {}'.format(prod, symbol, reversed_rhs[i+1], s1))
             if rhs[-1] in self.nonterminals.keys():
                 self.nonterminals[rhs[-1]]['follow'] = \
                         self.nonterminals[rhs[-1]]['follow'].union(
                             self.nonterminals[lhs]['follow']
                         )
-            print(64*'-')
-
-
+            log.debug('End of iteration' + 16*'-')
 
 if __name__ == '__main__':
     import sys

@@ -3,8 +3,8 @@ import pandas as pd
 from pprint import pprint
 from abstractsyntaxtree import AbstractSyntaxTree
 import random
+import logging 
 from constants import *
-
 class LL1Parser(object):
     def __init__(self, fname='ll1-expression-grammar.txt'):
         self.grammar = Grammar(fname)
@@ -14,7 +14,7 @@ class LL1Parser(object):
         )
         self.parsing_table.loc[:,:] = ERROR
         self.is_ll1 = True
-        pprint(self.parsing_table)
+        # pprint(self.parsing_table)
         self.build_parsing_table()
 
     def build_parsing_table(self):
@@ -33,9 +33,16 @@ class LL1Parser(object):
                         self.parsing_table.at[lhs, symbol].append(prod)
                         if len(self.parsing_table.at[lhs, symbol]) > 1:
                             self.is_ll1 = False
-        pprint(self.parsing_table)
+        # pprint(self.parsing_table)
+        log = logging.getLogger('yacv')
+        if not self.is_ll1:
+            log.exception('Grammar is not LL!')
+            # raise YACVInvalidGrammarError
+        else:
+            log.info('LL(1) parsing table successfully generated')
 
     def parse(self, string):
+        log = logging.getLogger('yacv')
         # string: list of terminals
         if string[-1] != '$':
             string.append('$')
@@ -55,7 +62,7 @@ class LL1Parser(object):
             elif self.parsing_table.at[stack[-1].root, a] != ACCEPT:
                 prod = self.parsing_table.at[stack[-1].root, a][0]
                 stack[-1].prod_id = self.grammar.prods.index(prod)
-                print(prod)
+                log.debug('Expanding production : {}'.format(prod))
                 desc_list = []
                 for symbol in prod.rhs:
                     x = AbstractSyntaxTree(symbol)
@@ -65,14 +72,16 @@ class LL1Parser(object):
                 if prod.rhs[0] != EPSILON:
                     for i in range(len(desc_list)-1, -1, -1):
                         stack.append(desc_list[i])
-                pprint(list(reversed(stack)))
-                print(64*'-')
+                log.debug(list(reversed(stack)))
+                log.debug('End of iteration' + 16*'-')
         return popped_stack[0]
     
     def visualize_syntaxtree(self, string):
+        log = logging.getLogger('yacv')
         import pygraphviz as pgv
         # Create the parse tree
         tree = self.parse(string)
+        log.info('String successfully parsed')
         if tree.root == 'S\'':
             tree = tree.desc[0]
         G = pgv.AGraph(name='AbstractSyntaxTree', directed=True)
@@ -113,15 +122,12 @@ class LL1Parser(object):
                 visited.append(node)
                 if node.attr['label'] in terminals:
                     terminal_nodes.append(node)
-                print(node.attr['label'])
                 for i in range(len(G.successors(node))-1, -1, -1):
                     stack.append(G.successors(node)[i])
                 # stack.extend(G.successors(node))
-        print(terminal_nodes)
-
+        log.debug('Terminal nodes : {}'.format(terminal_nodes))
         for i, prod in enumerate(prods):
             nonterminals = []
-            print(i, prod)
             for node_id in prod:
                 if G.get_node(node_id).attr['label'] in terminals:
                     continue
@@ -131,7 +137,7 @@ class LL1Parser(object):
             nt = G.subgraph(nonterminals, name='Production' + str(i))
             nt.graph_attr['rank'] = 'same'
             for j in range(len(nt.nodes())-1):
-                print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+                log.debug('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
                     j, nonterminals[j], j+1, nonterminals[j+1]
                 ))
                 nt.add_edge(nonterminals[j], nonterminals[j+1], \
@@ -140,7 +146,7 @@ class LL1Parser(object):
         t = G.add_subgraph(terminal_nodes, name='Terminals')
         t.graph_attr['rank'] = 'max'
         for i in range(len(t.nodes())-1):
-            print('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
+            log.debug('Adding edge from c.nodes()[{}]={} to c.nodes()[{}]={}'.format(
                 i, terminal_nodes[i], i+1, terminal_nodes[i+1]
             ))
             t.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis')
@@ -156,6 +162,7 @@ class LL1Parser(object):
 
         G.draw('sample.png')
         G.draw('sample.svg')
+        log.info('Parse tree successfully visualized')
         return G
         # print(tree)
         # print(G.string())
@@ -163,7 +170,9 @@ class LL1Parser(object):
 
 
 if __name__ == '__main__':
+    from utils import setup_logger
     import sys
+    setup_logger()
     if len(sys.argv) > 1:
         ll1 = LL1Parser(sys.argv[1])
     else:
