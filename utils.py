@@ -6,6 +6,8 @@ except ImportError as e:
     manimce = True
 import logging
 import os 
+from rich.traceback import install
+from rich.logging import RichHandler 
 
 def prepare_text(x):
     if manimce:
@@ -13,3 +15,10 @@ def prepare_text(x):
                 + '}'
     else:
         return x.replace('$', '\\$') if '\\$' not in x else x
+
+def setup_logger():
+    log = logging.getLogger('yacv')
+    log.setLevel('INFO')
+    log.addHandler(RichHandler())
+    install()
+    return

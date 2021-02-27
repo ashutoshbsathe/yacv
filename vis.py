@@ -383,8 +383,7 @@ if __name__ == '__main__':
     parser.add_argument('-w', action='store_true')
     parser.add_argument('-l', action='store_true')
     parser.add_argument('-o', action='store_true')
-    args = parser.parse_args()
-    print(args)
+    setup_logger()
     """
     bme = BasicManimExample()
     bme.setup()
