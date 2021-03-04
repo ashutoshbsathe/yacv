@@ -5,20 +5,19 @@ except ImportError as e:
     from manim import *
     manimce = True
 import colour 
-# TODO: Prepend every constant name with YACV
 # Parsing parameters
-ACTION  = 'ACTION'
-ACCEPT  = 'ACC'
-ERROR   = 'ERR'
-GOTO    = 'GOTO'
-DOT     = '•'
-REDUCE  = 'r'
-SHIFT   = 's'
-EPSILON = ''
+YACV_ACTION  = 'ACTION'
+YACV_ACCEPT  = 'ACC'
+YACV_ERROR   = 'ERR'
+YACV_GOTO    = 'GOTO'
+YACV_DOT     = '•'
+YACV_REDUCE  = 'r'
+YACV_SHIFT   = 's'
+YACV_EPSILON = ''
 
 # Graphviz parameters
-INFINITY = 2048
-COLORS = [
+YACV_GRAPHVIZ_INFINITY = 2048
+YACV_GRAPHVIZ_COLORS = [
     '#FF7F50', # 'coral',
     '#8B008B', # 'darkmagenta',
     '#006400', # 'darkblue',
@@ -38,17 +37,18 @@ COLORS = [
 ]
 
 # Manim parameters
-MAX_AST_WIDTH  = 10
-MAX_AST_HEIGHT = 6.5
-MAX_STACK_VIS  = 6
-TEXT_SCALE     = 0.5
-STATUS_SCALE   = 0.6
-STRING_SCALE   = 0.5
-STRING_LEADER  = '\\textbf{String} $\\rightarrow$ [' if manimce else \
-                        'String \\rightarrow ['
+YACV_MANIM_MAX_AST_WIDTH  = 10
+YACV_MANIM_MAX_AST_HEIGHT = 6.5
+YACV_MANIM_MAX_STACK_VIS  = 6
+YACV_MANIM_TEXT_SCALE     = 0.5
+YACV_MANIM_STATUS_SCALE   = 0.6
+YACV_MANIM_STRING_SCALE   = 0.5
+YACV_MANIM_STRING_LEADER  = '\\textbf{String} $\\rightarrow$ [' if \
+                                manimce else \
+                            'String \\rightarrow ['
 
 # Hackable config for manim
-manimce_config =  {
+yacv_manimce_config =  {
     'assets_dir': './',
     'background_color': colour.Color('#000'),
     'background_opacity': 1.0,
@@ -94,7 +94,7 @@ manimce_config =  {
     'write_all': False,
     'write_to_movie': True
 }
-manim_config = {
+yacv_manim_config = {
     'camera_config': {
         'background_color': colour.Color('#000'),
         'frame_rate': 60,

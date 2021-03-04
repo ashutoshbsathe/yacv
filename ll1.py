@@ -18,7 +18,7 @@ class LL1Parser(object):
             columns=self.grammar.terminals,
             index=self.grammar.nonterminals.keys()
         )
-        self.parsing_table.loc[:,:] = ERROR
+        self.parsing_table.loc[:,:] = YACV_ERROR
         self.is_ll1 = True
         # pprint(self.parsing_table)
         self.build_parsing_table()
@@ -28,13 +28,13 @@ class LL1Parser(object):
             lhs, rhs = prod.lhs, prod.rhs
             first_rhs = first(self.grammar, rhs)
             for terminal in first_rhs:
-                if terminal is not EPSILON:
-                    if self.parsing_table.at[lhs, terminal] == ERROR:
+                if terminal is not YACV_EPSILON:
+                    if self.parsing_table.at[lhs, terminal] == YACV_ERROR:
                         self.parsing_table.at[lhs, terminal] = []
                     self.parsing_table.at[lhs, terminal].append(prod)
                 else:
                     for symbol in self.grammar.nonterminals[lhs]['follow']:
-                        if self.parsing_table.at[lhs, symbol] == ERROR:
+                        if self.parsing_table.at[lhs, symbol] == YACV_ERROR:
                             self.parsing_table.at[lhs, symbol] = []
                         self.parsing_table.at[lhs, symbol].append(prod)
                         if len(self.parsing_table.at[lhs, symbol]) > 1:
@@ -63,9 +63,9 @@ class LL1Parser(object):
                 a = string.pop(0)
             elif stack[-1].root in self.grammar.terminals:
                 raise ValueError('Error because top = {}, terminal'.format(top))
-            elif self.parsing_table.at[stack[-1].root, a] == ERROR:
+            elif self.parsing_table.at[stack[-1].root, a] == YACV_ERROR:
                 raise ValueError('Error because parsing table errored out')
-            elif self.parsing_table.at[stack[-1].root, a] != ACCEPT:
+            elif self.parsing_table.at[stack[-1].root, a] != YACV_ACCEPT:
                 prod = self.parsing_table.at[stack[-1].root, a][0]
                 stack[-1].prod_id = self.grammar.prods.index(prod)
                 log.debug('Expanding production : {}'.format(prod))
@@ -75,7 +75,7 @@ class LL1Parser(object):
                     stack[-1].desc.append(x)
                     desc_list.append(x)
                 popped_stack.append(stack.pop(-1))
-                if prod.rhs[0] != EPSILON:
+                if prod.rhs[0] != YACV_EPSILON:
                     for i in range(len(desc_list)-1, -1, -1):
                         stack.append(desc_list[i])
                 log.debug(list(reversed(stack)))
@@ -101,12 +101,12 @@ class LL1Parser(object):
                 G.add_node(node_id, label=top.root)
                 node_id += 1
             if top.prod_id is not None:
-                color = COLORS[top.prod_id % len(COLORS)]
+                color = YACV_GRAPHVIZ_COLORS[top.prod_id % len(YACV_GRAPHVIZ_COLORS)]
                 G.get_node(node).attr['fontcolor'] = color
             desc_ids = []
             # G.get_node(node).attr['label'] += ', {}'.format(top.prod_id)
             for desc in top.desc:
-                if desc.root == EPSILON:
+                if desc.root == YACV_EPSILON:
                    label = G.get_node(node).attr['label'] 
                    label = '<' + label + ' = &#x3B5;>'
                    G.get_node(node).attr['label'] = label
@@ -147,7 +147,7 @@ class LL1Parser(object):
                     j, nonterminals[j], j+1, nonterminals[j+1]
                 ))
                 nt.add_edge(nonterminals[j], nonterminals[j+1], \
-                        style='invis', weight=INFINITY)
+                        style='invis', weight=YACV_GRAPHVIZ_INFINITY)
         
         t = G.add_subgraph(terminal_nodes, name='Terminals')
         t.graph_attr['rank'] = 'max'

@@ -8,14 +8,14 @@ import logging
 import os 
 from rich.traceback import install
 from rich.logging import RichHandler 
-from constants import manimce_config, manim_config
+from constants import yacv_manimce_config, yacv_manim_config
 class YACVError(Exception):
     pass
 
 def prepare_text(x):
     if manimce:
-        return '\\textbf{' + x.replace('$', '\\$') if '\\$' not in x else x \
-                + '}'
+        return '\\textbf{' + x.replace('$', '\\$') if \
+                '\\$' not in x else x + '}'
     else:
         return x.replace('$', '\\$') if '\\$' not in x else x
 
@@ -58,7 +58,7 @@ def get_manim_config(save_dir, fname, video_quality='480p'):
     width, height = quality['width'], quality['height']
     fps = quality['fps']
     if manimce:
-        config = manimce_config
+        config = yacv_manimce_config
         config['assets_dir'] = save_dir 
         config['media_dir'] = save_dir 
         config['output_file'] = fname 
@@ -67,7 +67,7 @@ def get_manim_config(save_dir, fname, video_quality='480p'):
         config['frame_rate'] = fps
         return config 
     else:
-        config = manim_config 
+        config = yacv_manim_config 
         config['file_writer_config']['file_name'] = fname 
         config['file_writer_config']['output_directory'] = save_dir
         config['camera_config']['pixel_width'] = width 

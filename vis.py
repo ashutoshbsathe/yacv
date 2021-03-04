@@ -52,9 +52,9 @@ class LL1ParsingVisualizer(Scene):
         prev_mobject = None 
         curr_mobject = None 
         status_mobject  = Text('START')
-        status_mobject.scale(STATUS_SCALE)
+        status_mobject.scale(YACV_MANIM_STATUS_SCALE)
         status_pos = 5.5*LEFT + 3*UP
-        string_text = [STRING_LEADER]
+        string_text = [YACV_MANIM_STRING_LEADER]
         string_text.extend([prepare_text(x) for x in string])
         string_text.append(']')
         string_mobject = Tex(*string_text)
@@ -62,7 +62,7 @@ class LL1ParsingVisualizer(Scene):
         string_pos = 0*LEFT + 3.5*DOWN
         string_mobject.move_to(string_pos)
         string_mobject[1].set_color(RED)
-        string_mobject.scale(STRING_SCALE)
+        string_mobject.scale(YACV_MANIM_STRING_SCALE)
         status_mobject.move_to(status_pos)
 
         self.add(status_mobject)
@@ -78,7 +78,7 @@ class LL1ParsingVisualizer(Scene):
                 popped_stack.append(stack.pop(-1))
                 a = string.pop(0)
                 new_status_mobject = Text('Match {}'.format(a))
-                new_status_mobject.scale(STRING_SCALE)
+                new_status_mobject.scale(YACV_MANIM_STRING_SCALE)
                 new_status_mobject.move_to(status_pos)
                 self.play(Transform(status_mobject, new_status_mobject))
                 self.play(ShowCreationThenDestructionAround(new_status_mobject))
@@ -86,24 +86,21 @@ class LL1ParsingVisualizer(Scene):
             elif stack[-1].root in p.grammar.terminals:
                 raise ValueError('Error because top = {}, terminal'.format(stack[-1].root))
             elif p.parsing_table.at[stack[-1].root.replace('\\$', '$'), a] ==\
-                    ERROR:
+                    YACV_ERROR:
                 raise ValueError('Error entry in the parsing table for top = {}, a = {}'.format(stack[-1].root, a))
             elif p.parsing_table.at[stack[-1].root.replace('\\$', '$'), a] !=\
-                    ACCEPT:
+                    YACV_ACCEPT:
                 prod = p.parsing_table.at[stack[-1].root, a][0]
                 log.info(prod)
-                log.info('{}, {}'.format(type(prod.rhs), prod.rhs))
-                log.info('{}'.format(prod.rhs[0] == EPSILON))
                 prod_text = '{} '.format(prod.lhs)
                 prod_text += '$\\rightarrow$' if manimce else '\\rightarrow'
-                if prod.rhs[0] == EPSILON:
+                if prod.rhs[0] == YACV_EPSILON:
                     prod_text += ' $\\epsilon$' if manimce else ' \\epsilon'
                 else:
-                    log.info('RHS is NOT EPSILON')
                     prod_text += ' {}'.format(''.join(prod.rhs)\
                             .replace('$', '\\$'))
                 new_status_mobject = Tex(prod_text)
-                new_status_mobject.scale(STATUS_SCALE)
+                new_status_mobject.scale(YACV_MANIM_STATUS_SCALE)
                 new_status_mobject.move_to(status_pos)
                 self.play(Transform(status_mobject, new_status_mobject))
                 self.play(ShowCreationThenDestructionAround(new_status_mobject))
@@ -118,12 +115,12 @@ class LL1ParsingVisualizer(Scene):
                     stack[-1].desc.append(x)
                     desc_list.append(x)
                 popped_stack.append(stack.pop(-1))
-                if prod.rhs[0] != EPSILON:
+                if prod.rhs[0] != YACV_EPSILON:
                     for i in range(len(desc_list)-1,-1,-1):
                         stack.append(desc_list[i])
             # Starting Animations
             all_anims = []
-            string_text = [STRING_LEADER]
+            string_text = [YACV_MANIM_STRING_LEADER]
             string_text.extend([prepare_text(x) for x in string])
             string_text.append(']')
             log.debug(string_text)
@@ -131,7 +128,7 @@ class LL1ParsingVisualizer(Scene):
             new_string_mobject.arrange(RIGHT, buff=0.25)
             new_string_mobject[1].set_color(RED)
             new_string_mobject.move_to(string_pos)
-            new_string_mobject.scale(STRING_SCALE)
+            new_string_mobject.scale(YACV_MANIM_STRING_SCALE)
             curr_stack_mobject = StackMobject(stack)
             anim_s = transform_stacks(old_stack_mobject, curr_stack_mobject)
             curr_mobject = GraphvizMobject(stack_to_graphviz([popped_stack[0]]\
@@ -154,7 +151,7 @@ class LL1ParsingVisualizer(Scene):
             # Ending Animations 
             log.debug(popped_stack)
         new_status_mobject = Tex('ACCEPT')
-        new_status_mobject.scale(STATUS_SCALE)
+        new_status_mobject.scale(YACV_MANIM_STATUS_SCALE)
         new_status_mobject.move_to(status_pos)
         new_status_mobject.set_color(YELLOW)
         self.play(Transform(status_mobject, new_status_mobject))
@@ -193,9 +190,9 @@ class LRParsingVisualizer(Scene):
         curr_mobject = None 
         curr_node_id = 0 # Assigning the node ids as we build the tree 
         status_mobject  = Text('START')
-        status_mobject.scale(STATUS_SCALE)
+        status_mobject.scale(YACV_MANIM_STATUS_SCALE)
         status_pos = 5.5*LEFT + 3*UP
-        string_text = [STRING_LEADER]
+        string_text = [YACV_MANIM_STRING_LEADER]
         string_text.extend([prepare_text(x) for x in string])
         string_text.append(']')
         log.debug(string_text)
@@ -204,20 +201,20 @@ class LRParsingVisualizer(Scene):
         string_pos = 0*LEFT + 3.5*DOWN
         string_mobject.move_to(string_pos)
         string_mobject[1].set_color(RED)
-        string_mobject.scale(STRING_SCALE)
+        string_mobject.scale(YACV_MANIM_STRING_SCALE)
         status_mobject.move_to(status_pos)
         self.add(status_mobject)
         self.add(string_mobject)
         while True:
             top = stack[-1]
             a = string[0]
-            entry = p.parsing_table.at[top, (ACTION, a)]
+            entry = p.parsing_table.at[top, (YACV_ACTION, a)]
             if old_stack_mobject is None:
                 old_stack_mobject = StackMobject(stack)
                 self.add(old_stack_mobject)
-            if entry == ERROR:
+            if entry == YACV_ERROR:
                 # TODO: Get better error messages here
-                raise ValueError('Parsing error. Got ERROR entry for top = {}, a = {}'.format(top, a))
+                raise ValueError('Parsing error. Got YACV_ERROR entry for top = {}, a = {}'.format(top, a))
             if isinstance(entry, list):
                 # TODO: Can we implement some precedence here ?
                 # Like, if it's shift reduce conflict, user configures the 
@@ -236,7 +233,7 @@ class LRParsingVisualizer(Scene):
                 # Starting Animation 
                 new_status_mobject=Text('SHIFT {}'.format(int(entry[1:])))
                 new_status_mobject.move_to(status_pos)
-                new_status_mobject.scale(STATUS_SCALE)
+                new_status_mobject.scale(YACV_MANIM_STATUS_SCALE)
                 self.play(Transform(status_mobject, new_status_mobject))
                 self.play(ShowCreationThenDestructionAround(new_status_mobject))
                 self.wait(1)
@@ -246,14 +243,14 @@ class LRParsingVisualizer(Scene):
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                             p.grammar))
-                string_text = [STRING_LEADER]
+                string_text = [YACV_MANIM_STRING_LEADER]
                 string_text.extend([prepare_text(x) for x in string])
                 string_text.append(']')
                 new_string_mobject = Tex(*string_text)
                 new_string_mobject.arrange(RIGHT, buff=0.25)
                 new_string_mobject[1].set_color(RED)
                 new_string_mobject.move_to(string_pos)
-                new_string_mobject.scale(STRING_SCALE)
+                new_string_mobject.scale(YACV_MANIM_STRING_SCALE)
                 if prev_mobject is not None:
                     anim_t = transform_graphviz_graphs(prev_mobject, \
                             curr_mobject)
@@ -295,13 +292,13 @@ class LRParsingVisualizer(Scene):
                     prod_text = '{} $\\rightarrow$'.format(prod.lhs)
                 else:
                     prod_text = '{} \\rightarrow'.format(prod.lhs)
-                if prod.rhs[0] == EPSILON:
+                if prod.rhs[0] == YACV_EPSILON:
                     prod_text += ' $\\epsilon$' if manimce else ' \\epsilon'
                 else:
                     prod_text += ' {}'.format(' '.join(prod.rhs))
                 new_status_mobject = Tex(prod_text)
                 new_status_mobject.move_to(status_pos)
-                new_status_mobject.scale(STATUS_SCALE)
+                new_status_mobject.scale(YACV_MANIM_STATUS_SCALE)
                 self.play(Transform(status_mobject, new_status_mobject))
                 self.play(ShowCreationThenDestructionAround(new_status_mobject))
                 # self.play(Transform(status_mobject, \
@@ -315,7 +312,7 @@ class LRParsingVisualizer(Scene):
                 # are proper
                 # TODO: can this be optimized ?
                 popped_list = []
-                if prod.rhs[0] != EPSILON:
+                if prod.rhs[0] != YACV_EPSILON:
                     for _ in range(len(prod.rhs)):
                         if not stack:
                             raise ValueError('Parsing Error: Stack prematurely empty')
@@ -327,7 +324,7 @@ class LRParsingVisualizer(Scene):
                     # Note here that we don't need to increment `curr_node_id`
                     # This is because `epsilon` nodes are merged with their 
                     # parents when converting AST to Graphviz
-                    new_tree.desc.append(AbstractSyntaxTree(EPSILON))
+                    new_tree.desc.append(AbstractSyntaxTree(YACV_EPSILON))
                 for i in range(len(popped_list)-1,-1,-1):
                     new_tree.desc.append(popped_list[i])
                 # Starting Animation 
@@ -339,7 +336,7 @@ class LRParsingVisualizer(Scene):
                 # Ending Animation 
                 new_top = stack[-1]
                 nonterminal = prod.lhs 
-                new_state = p.parsing_table.at[new_top, (GOTO, nonterminal)]
+                new_state = p.parsing_table.at[new_top, (YACV_GOTO, nonterminal)]
                 stack.append(new_tree)
                 if isinstance(new_state, list):
                     new_state = new_state[0]
@@ -360,7 +357,7 @@ class LRParsingVisualizer(Scene):
                 old_stack_mobject = curr_stack_mobject
                 prev_mobject = curr_mobject 
                 # Ending Animation 
-            elif entry == ACCEPT:
+            elif entry == YACV_ACCEPT:
                 prod = p.grammar.prods[0]
                 assert prod.rhs[-1] == '$' and len(prod.rhs) == 2
                 # Parsing successful 
@@ -368,16 +365,16 @@ class LRParsingVisualizer(Scene):
                 new_status_mobject = Tex("ACCEPT")
                 new_status_mobject.move_to(status_pos)
                 new_status_mobject.set_color(YELLOW)
-                new_status_mobject.scale(STATUS_SCALE)
+                new_status_mobject.scale(YACV_MANIM_STATUS_SCALE)
                 self.play(Transform(status_mobject, new_status_mobject))
                 self.play(ShowCreationThenDestructionAround(new_status_mobject))
                 self.remove(new_status_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                         p.grammar))
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
-                new_string_mobject = Tex(STRING_LEADER, ']')
+                new_string_mobject = Tex(YACV_MANIM_STRING_LEADER, ']')
                 new_string_mobject.move_to(string_pos)
-                new_string_mobject.scale(STRING_SCALE)
+                new_string_mobject.scale(YACV_MANIM_STRING_SCALE)
                 anims.append(Transform(string_mobject, new_string_mobject))
                 anims.append(FadeOut(string_mobject))
                 self.play(*anims)

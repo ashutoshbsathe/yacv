@@ -16,7 +16,7 @@ class LRItem(object):
 
     def update_reduce(self):
         if self.dot_pos == len(self.production.rhs) \
-        or self.production.rhs[self.dot_pos] in ['$', EPSILON]:
+        or self.production.rhs[self.dot_pos] in ['$', YACV_EPSILON]:
             self.reduce = True
         else:
             self.reduce = False
@@ -29,7 +29,7 @@ class LRItem(object):
         ret = '{} -> {}{}{}'.format(
                 lhs,
                 ''.join(rhs[:dot_pos]) if dot_pos > 0 else '',
-                DOT,
+                YACV_DOT,
                 ''.join(rhs[dot_pos:])
                 )
         if lookaheads:
@@ -97,15 +97,15 @@ class LRParser(object):
         self.automaton_transitions = OrderedDict()
         self.automaton_built = False
         self.build_automaton()
-        tuples = [(ACTION, symbol) for symbol in self.grammar.terminals] + \
-            [(GOTO, symbol) for symbol in self.grammar.nonterminals.keys()]
+        tuples = [(YACV_ACTION, symbol) for symbol in self.grammar.terminals] + \
+            [(YACV_GOTO, symbol) for symbol in self.grammar.nonterminals.keys()]
         columns = pd.MultiIndex.from_tuples([('', x[0])
             if pd.isnull(x[1]) else x for x in tuples])
         self.parsing_table = pd.DataFrame(
             columns = columns,
             index = self.automaton_transitions.keys()
         )
-        self.parsing_table.loc[:,:] = ERROR
+        self.parsing_table.loc[:,:] = YACV_ERROR
         self.parsing_table_built = False
         self.build_parsing_table()
 
@@ -123,7 +123,7 @@ class LRParser(object):
                 continue
             next_symbol = item.production.rhs[item.dot_pos]
             log.debug('next_symbol = {}'.format(next_symbol))
-            if next_symbol == EPSILON \
+            if next_symbol == YACV_EPSILON \
             or next_symbol in self.grammar.terminals:
                 continue
             prod_ids = self.grammar.nonterminals[next_symbol]['prods_lhs']
@@ -134,11 +134,11 @@ class LRParser(object):
                 if item.lookaheads:
                     f = first(self.grammar, 
                             item.production.rhs[item.dot_pos+1:])
-                    if not f or EPSILON in f:
+                    if not f or YACV_EPSILON in f:
                         # f = f.union(set(item.lookaheads).difference(['$']))
                         # else:
                         f = f.union(set(item.lookaheads))
-                    f = f.difference([EPSILON])
+                    f = f.difference([YACV_EPSILON])
                 else:
                     f = []
                 new_item = LRItem(prod, 0, f)
@@ -230,10 +230,10 @@ class LRParser(object):
         while True:
             top = stack[-1]
             a = string[0]
-            entry = self.parsing_table.at[top, (ACTION, a)]
-            if entry == ERROR:
+            entry = self.parsing_table.at[top, (YACV_ACTION, a)]
+            if entry == YACV_ERROR:
                 log.error('Parse error')
-                raise YACVError('ERROR entry for top = {}, a = {}'.format(top, a))
+                raise YACVError('YACV_ERROR entry for top = {}, a = {}'.format(top, a))
             if isinstance(entry, list):
                 entry = entry[0]
             log.debug('stack top = {}, a = {}, entry = {}'.format(top, a, entry))
@@ -247,7 +247,7 @@ class LRParser(object):
                 new_tree = AbstractSyntaxTree(prod.lhs)
                 new_tree.prod_id = prod_id
                 popped_list = []
-                if prod.rhs[0] != EPSILON:
+                if prod.rhs[0] != YACV_EPSILON:
                     for _ in range(len(prod.rhs)):
                         if not stack:
                             raise YACVError('Stack prematurely empty')
@@ -256,17 +256,17 @@ class LRParser(object):
                             raise YACVError('Stack prematurely empty')
                         popped_list.append(stack.pop(-1)) # pops the symbol
                 else:
-                    new_tree.desc.append(AbstractSyntaxTree(EPSILON))
+                    new_tree.desc.append(AbstractSyntaxTree(YACV_EPSILON))
                 for i in range(len(popped_list)-1, -1, -1):
                     new_tree.desc.append(popped_list[i])
                 new_top = stack[-1]
                 nonterminal = prod.lhs
-                new_state = self.parsing_table.at[new_top, (GOTO, nonterminal)]
+                new_state = self.parsing_table.at[new_top, (YACV_GOTO, nonterminal)]
                 stack.append(new_tree)
                 if isinstance(new_state, list):
                     new_state = new_state[0]
                 stack.append(int(new_state))
-            elif entry == ACCEPT:
+            elif entry == YACV_ACCEPT:
                 prod = self.grammar.prods[0]
                 assert prod.rhs[-1] == '$' and len(prod.rhs) == 2
                 if not stack:
@@ -303,14 +303,14 @@ class LRParser(object):
                 G.add_node(node_id, label=top.root)
                 node_id += 1
             if top.prod_id is not None:
-                color = COLORS[top.prod_id % len(COLORS)]
+                color = YACV_GRAPHVIZ_COLORS[top.prod_id % len(YACV_GRAPHVIZ_COLORS)]
                 G.get_node(node).attr['fontcolor'] = color
             desc_ids = []
             # G.get_node(node).attr['label'] += ', {}'.format(top.prod_id)
             # pprint(top.desc)
             for desc in top.desc:
                 # pprint(desc)
-                if desc.root == EPSILON:
+                if desc.root == YACV_EPSILON:
                    label = G.get_node(node).attr['label'] 
                    label = '<' + label + ' = &#x3B5;>'
                    G.get_node(node).attr['label'] = label
@@ -353,7 +353,7 @@ class LRParser(object):
                     j, nonterminals[j], j+1, nonterminals[j+1]
                 ))
                 nt.add_edge(nonterminals[j], nonterminals[j+1], \
-                        style='invis', weight=INFINITY)
+                        style='invis', weight=YACV_GRAPHVIZ_INFINITY)
 
         t = G.add_subgraph(terminal_nodes, name='Terminals')
         t.graph_attr['rank'] = 'max'
@@ -386,7 +386,7 @@ class LRParser(object):
         for i, state in enumerate(self.automaton_states):
             label = '<U><B>State {}<BR/></B></U>'.format(i) + \
                     state.__str__(join_on='<BR/>') 
-            label = label.replace(DOT, '&#xB7;')
+            label = label.replace(YACV_DOT, '&#xB7;')
             label = label.replace('->', '&#10132;')
             label = '<' + label + '>'
             log.debug(label)
@@ -436,28 +436,28 @@ class LR0Parser(LRParser):
         for state_id, transitions in self.automaton_transitions.items():
             state = self.automaton_states[state_id]
             if state.accept:
-                col = (ACTION, '$')
-                self.parsing_table.at[state_id, col] = ACCEPT
+                col = (YACV_ACTION, '$')
+                self.parsing_table.at[state_id, col] = YACV_ACCEPT
             elif len(state.reduce_items) > 0:
                 for t in self.grammar.terminals:
-                    col = (ACTION, t)
-                    if self.parsing_table.at[state_id, col] == ERROR:
+                    col = (YACV_ACTION, t)
+                    if self.parsing_table.at[state_id, col] == YACV_ERROR:
                         self.parsing_table.at[state_id, col] = []
                     for item in state.items:
                         if item.reduce:
                             prod_id = self.grammar.prods.index(item.production)
-                            entry = REDUCE + str(prod_id)
+                            entry = YACV_REDUCE + str(prod_id)
                             self.parsing_table.at[state_id, col].append(entry)
                             if len(self.parsing_table.at[state_id, col]) > 1:
                                 self.is_valid = False
             for symbol, new_state_id in transitions.items():
                 if symbol in terminals:
                     entry = SHIFT + str(new_state_id)
-                    col = (ACTION, symbol)
+                    col = (YACV_ACTION, symbol)
                 else:
                     entry = str(new_state_id)
-                    col = (GOTO, symbol)
-                if self.parsing_table.at[state_id, col] == ERROR:
+                    col = (YACV_GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == YACV_ERROR:
                     self.parsing_table.at[state_id, col] = []
                 self.parsing_table.at[state_id, col].append(entry)
                 if len(self.parsing_table.at[state_id, col]) > 1:
@@ -483,18 +483,18 @@ class SLR1Parser(LR0Parser):
         for state_id, transitions in self.automaton_transitions.items():
             state = self.automaton_states[state_id]
             if state.accept:
-                col = (ACTION, '$')
-                self.parsing_table.at[state_id, col] = ACCEPT
+                col = (YACV_ACTION, '$')
+                self.parsing_table.at[state_id, col] = YACV_ACCEPT
             elif len(state.reduce_items) > 0:
                 for item in state.items:
                     if item.reduce:
                         lhs = item.production.lhs
                         follow = self.grammar.nonterminals[lhs]['follow']
                         prod_id = self.grammar.prods.index(item.production)
-                        entry = REDUCE + str(prod_id)
+                        entry = YACV_REDUCE + str(prod_id)
                         for symbol in follow:
-                            col = (ACTION, symbol)
-                            if self.parsing_table.at[state_id, col] == ERROR:
+                            col = (YACV_ACTION, symbol)
+                            if self.parsing_table.at[state_id, col] == YACV_ERROR:
                                 self.parsing_table.at[state_id, col] = []
                             self.parsing_table.at[state_id, col].append(entry)
                             if len(self.parsing_table.at[state_id, col]) > 1:
@@ -502,11 +502,11 @@ class SLR1Parser(LR0Parser):
             for symbol, new_state_id in transitions.items():
                 if symbol in terminals:
                     entry = SHIFT + str(new_state_id)
-                    col = (ACTION, symbol)
+                    col = (YACV_ACTION, symbol)
                 else:
                     entry = str(new_state_id)
-                    col = (GOTO, symbol)
-                if self.parsing_table.at[state_id, col] == ERROR:
+                    col = (YACV_GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == YACV_ERROR:
                     self.parsing_table.at[state_id, col] = []
                 self.parsing_table.at[state_id, col].append(entry)
                 if len(self.parsing_table.at[state_id, col]) > 1:
@@ -548,14 +548,14 @@ class LR1Parser(LRParser):
                         prod = item.production
                         prod_id = self.grammar.prods.index(prod)
                         if prod_id == 0:
-                            col = (ACTION, '$')
-                            self.parsing_table.at[state_id, col] = ACCEPT
+                            col = (YACV_ACTION, '$')
+                            self.parsing_table.at[state_id, col] = YACV_ACCEPT
                             continue
                         lookaheads = item.lookaheads
                         entry = 'r' + str(prod_id)
                         for symbol in item.lookaheads:
-                            col = (ACTION, symbol)
-                            if self.parsing_table.at[state_id, col] == ERROR:
+                            col = (YACV_ACTION, symbol)
+                            if self.parsing_table.at[state_id, col] == YACV_ERROR:
                                 self.parsing_table.at[state_id, col] = []
                             self.parsing_table.at[state_id, col].append(entry)
                             if len(self.parsing_table.at[state_id, col]) > 1:
@@ -563,11 +563,11 @@ class LR1Parser(LRParser):
             for symbol, new_state_id in transitions.items():
                 if symbol in terminals:
                     entry = 's' + str(new_state_id)
-                    col = (ACTION, symbol)
+                    col = (YACV_ACTION, symbol)
                 else:
                     entry = str(new_state_id)
-                    col = (GOTO, symbol)
-                if self.parsing_table.at[state_id, col] == ERROR:
+                    col = (YACV_GOTO, symbol)
+                if self.parsing_table.at[state_id, col] == YACV_ERROR:
                     self.parsing_table.at[state_id, col] = []
                 self.parsing_table.at[state_id, col].append(entry)
                 if len(self.parsing_table.at[state_id, col]) > 1:

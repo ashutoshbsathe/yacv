@@ -8,7 +8,7 @@ class Production(object):
         self.rhs = rhs
 
     def __str__(self):
-        rhs = 'ϵ' if self.rhs[0] == EPSILON else ''.join(self.rhs)
+        rhs = 'ϵ' if self.rhs[0] == YACV_EPSILON else ''.join(self.rhs)
         return '{} -> {}'.format(self.lhs, rhs)
     
     def __repr__(self):
@@ -26,8 +26,8 @@ def first(g, s):
     # s: RHS or Part of RHS as list
     if not s:
         return set() # empty set
-    if s[0] == EPSILON:
-        return set([EPSILON]) # set with epsilon in it
+    if s[0] == YACV_EPSILON:
+        return set([YACV_EPSILON]) # set with epsilon in it
     if s[0] not in g.nonterminals.keys():
         return set([s[0]])
     # At this point, s[0] must be a non terminal
@@ -41,7 +41,7 @@ def first(g, s):
         ret = ret.union(x)
         """
         i = 0
-        while EPSILON in x:
+        while YACV_EPSILON in x:
             # note that, if all the symbols are nullable
             # then i will exceed list length
             # this is handled in the base case of recursion
@@ -49,7 +49,7 @@ def first(g, s):
             i += 1
             ret = ret.union(x)
         """
-    if EPSILON in ret:
+    if YACV_EPSILON in ret:
         x = first(g, s[1:])
         ret = ret.union(x)
     return ret
@@ -70,7 +70,7 @@ class Grammar(object):
             # TODO: find a better way to do this
             for i, _ in enumerate(rhs):
                 if rhs[i] == "\'\'":
-                    rhs[i] = EPSILON
+                    rhs[i] = YACV_EPSILON
             self.prods.append(
                 Production(lhs, rhs)
             )
@@ -95,8 +95,8 @@ class Grammar(object):
             else:
                 self.nonterminals[lhs]['prods_lhs'].append(i)
         self.terminals = all_symbols.difference(set(self.nonterminals.keys()))
-        if EPSILON in self.terminals:
-            self.terminals = self.terminals.difference(set([EPSILON]))
+        if YACV_EPSILON in self.terminals:
+            self.terminals = self.terminals.difference(set([YACV_EPSILON]))
         self.terminals.add('$')
         self.terminals = sorted(self.terminals)
         # Update nonterminals_on_rhs for every prod using above data
@@ -112,7 +112,7 @@ class Grammar(object):
         # inefficient method, but should work fine for most small grammars
         for nt in self.nonterminals.keys():
             tmp = first(self, [nt])
-            if EPSILON in tmp:
+            if YACV_EPSILON in tmp:
                 self.nonterminals[nt]['nullable'] = True
             self.nonterminals[nt]['first'] = tmp
 
@@ -129,10 +129,10 @@ class Grammar(object):
                     nt
                 ))
                 f = first(self, self.prods[prodno].rhs[idx+1:])
-                if not f or EPSILON in f:
+                if not f or YACV_EPSILON in f:
                     f.add('$')
                 s = s.union(f)
-                s = s.difference(set([EPSILON]))
+                s = s.difference(set([YACV_EPSILON]))
             self.nonterminals[nt]['follow'] = s
             log.debug('FOLLOW({}) = {}'.format(nt, s))
         for prod in self.prods:

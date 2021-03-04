@@ -1,4 +1,5 @@
-from grammar import Production, EPSILON
+from grammar import Production
+from constants import YACV_EPSILON
 from pprint import pformat
 class AbstractSyntaxTree(object):
     def __init__(self, *args):

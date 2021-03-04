@@ -33,7 +33,7 @@ class GraphvizMobject(VGroup):
     def gridify(self, x, y):
         log = logging.getLogger('yacv')
         assert self.bounding_box is not None and len(self.bounding_box) == 4
-        global MAX_AST_HEIGHT, MAX_AST_WIDTH
+        global YACV_MANIM_MAX_AST_HEIGHT, YACV_MANIM_MAX_AST_WIDTH
         bounding_box = self.bounding_box
         if self.new_bbox is None:
             width = bounding_box[2] - bounding_box[0]
@@ -41,9 +41,9 @@ class GraphvizMobject(VGroup):
             ratio = width / height 
             # Find the maximum bbox that fits the screen "nicely"
             new_bbox = (0, 0)
-            for new_height in np.linspace(1.0, MAX_AST_HEIGHT, num=100):
+            for new_height in np.linspace(1.0, YACV_MANIM_MAX_AST_HEIGHT, num=100):
                 new_width = ratio * new_height 
-                if new_width <= MAX_AST_WIDTH:
+                if new_width <= YACV_MANIM_MAX_AST_WIDTH:
                     new_bbox = (new_width, new_height) 
             new_width, new_height = new_bbox
             new_bbox = [-new_width/2, -new_height/2, new_width/2, new_height/2]
@@ -98,7 +98,7 @@ class GraphvizMobject(VGroup):
             dot.move_to(x*RIGHT + y*UP)
             if n.attr['fontcolor']:
                 dot.set_color(n.attr['fontcolor'])
-            dot.scale(TEXT_SCALE)
+            dot.scale(YACV_MANIM_TEXT_SCALE)
             self.add(dot)
             self.nodes[str(n)] = dot 
             log.debug('End of iteration for adding a node')
@@ -191,11 +191,11 @@ def ast_to_graphviz(ast, grammar):
         if str(node) not in G.nodes():
             G.add_node(node, label=top.root)
         if top.prod_id is not None:
-            color = COLORS[top.prod_id % len(COLORS)]
+            color = YACV_GRAPHVIZ_COLORS[top.prod_id % len(YACV_GRAPHVIZ_COLORS)]
             G.get_node(node).attr['fontcolor'] = color 
         desc_ids = []
         for desc in top.desc:
-            if desc.root == EPSILON:
+            if desc.root == YACV_EPSILON:
                 label = G.get_node(node).attr['label']
                 label = '<' + label + ' = &#x3B5;>'
                 G.get_node(node).attr['label'] = label 
@@ -235,7 +235,7 @@ def ast_to_graphviz(ast, grammar):
         nt.graph_attr['rank'] = 'same'
         for j in range(len(nt.nodes())-1):
             nt.add_edge(nonterminals[j], nonterminals[j+1], style='invis', \
-                    weight=INFINITY)
+                    weight=YACV_GRAPHVIZ_INFINITY)
 
     return G, terminal_nodes 
 
@@ -270,14 +270,14 @@ def stack_to_graphviz(stack, grammar):
             # Adding these just to be safe 
             # TODO: experiment with removing this once ?
             for e in graph.edges():
-                prod.add_edge(e[0], e[1], style='invis', weight=INFINITY)
+                prod.add_edge(e[0], e[1], style='invis', weight=YACV_GRAPHVIZ_INFINITY)
 
     # Finally, add the subgraph containing all the terminals 
     term = ret.add_subgraph(terminal_nodes, name='Terminals')
     term.graph_attr['rank'] = 'sink' 
     for i in range(len(term.nodes())-1):
         term.add_edge(terminal_nodes[i], terminal_nodes[i+1], style='invis', \
-                weight=INFINITY)
+                weight=YACV_GRAPHVIZ_INFINITY)
 
     ret.edge_attr['dir'] = 'none'
     ret.node_attr['ordering'] = 'out'
@@ -340,16 +340,16 @@ class StackMobject(VGroup):
         prev_mobject = self.bottom
         if stack is not None:
             self.stack_len = len(stack)
-            if self.stack_len > MAX_STACK_VIS:
+            if self.stack_len > YACV_MANIM_MAX_STACK_VIS:
                 self.remove(bottom_line)
                 self.add(bottom_text)
                 self.bottom = bottom_text
                 prev_mobject = bottom_text
-            if len(stack) > MAX_STACK_VIS:
-                start_idx = stack.index(stack[-MAX_STACK_VIS])
+            if len(stack) > YACV_MANIM_MAX_STACK_VIS:
+                start_idx = stack.index(stack[-YACV_MANIM_MAX_STACK_VIS])
             else:
                 start_idx = 0
-            stack = stack[-MAX_STACK_VIS:]
+            stack = stack[-YACV_MANIM_MAX_STACK_VIS:]
             for i, elem in enumerate(stack):
                 if isinstance(elem, AbstractSyntaxTree):
                     text = elem.root 
@@ -357,7 +357,7 @@ class StackMobject(VGroup):
                     text = str(elem) 
                 new_mobject = Tex(prepare_text(text))
                 new_mobject.next_to(prev_mobject, UP)
-                new_mobject.scale(TEXT_SCALE)
+                new_mobject.scale(YACV_MANIM_TEXT_SCALE)
                 self.add(new_mobject)
                 prev_mobject = new_mobject
                 self.elements[start_idx + i] = new_mobject 
@@ -369,7 +369,7 @@ class StackMobject(VGroup):
 
         self.indicator = Tex('Stack')
         self.indicator.next_to(self.bottom, DOWN)
-        self.indicator.scale(TEXT_SCALE)
+        self.indicator.scale(YACV_MANIM_TEXT_SCALE)
         self.add(self.indicator)
 
 def transform_stacks(old, new):
