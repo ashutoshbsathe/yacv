@@ -8,10 +8,10 @@ import argparse
 import logging
 import os 
 from grammar import Grammar
-from utils import setup_logger, YACVError
+from utils import setup_logger, get_manim_config
 from ll1 import LL1Parser
 from lr import LR0Parser, SLR1Parser, LALR1Parser, LR1Parser
-
+from vis import LL1ParsingVisualizer, LRParsingVisualizer
 parser_map = {
     'll1'  : LL1Parser,
     'lr0'  : LR0Parser,
@@ -39,7 +39,7 @@ def parse_args():
             action='store_true', \
             help='Visualize parsing process using manim')
     parser.add_argument('--manim-video-quality', default='480p', \
-            choices=['480p', '720p', '1080p', '1440p'], \
+            choices=['480p', '720p', '1080p', '1440p', '2160p'], \
             help='Video quality for manim rendering')
     args = parser.parse_args()
     return args
@@ -67,10 +67,12 @@ def main():
     if args.parsing_table:
         fname = '{}-parsing-table.csv'.format(args.parsing_algo)
         p.parsing_table.to_csv(os.path.join(folder, fname))
+        log.info('Parsing table exported to {}'.format(os.path.join(folder, fname)))
     if args.vis_automaton:
         fname = '{}-state-automaton.pdf'.format(args.parsing_algo)
         G = p.visualize_automaton()
         G.draw(os.path.join(folder, fname))
+        log.info('LR automaton visualized at {}'.format(os.path.join(folder, fname)))
     string = args.string.split(' ')
     if string[-1] != '$':
         string.append('$')
@@ -78,8 +80,32 @@ def main():
         string_folder = ''.join(string)
         string_folder = os.path.join(folder, string_folder)
         os.makedirs(string_folder, exist_ok=True)
+        fname = 'abstractsyntaxtree.pdf'
         G = p.visualize_syntaxtree(string)
         G.draw(os.path.join(string_folder, fname))
+        log.info('Syntax tree visualized to {}'.format(os.path.join(folder, fname)))
+    if args.vis_parsing:
+        string_folder = ''.join(string)
+        string_folder = os.path.join(folder, string_folder)
+        os.makedirs(string_folder, exist_ok=True)
+        fname = 'ManimParsingVisualization'
+        manim_config = get_manim_config(string_folder, fname, \
+                args.manim_video_quality)
+        if manimce:
+            from manim import config 
+            for k, v in manim_config.items():
+                config[k] = v
+            kwargs = {}
+        else:
+            kwargs = manim_config 
+        vis = LL1ParsingVisualizer(**kwargs) if args.parsing_algo == \
+                'll1' else LRParsingVisualizer(**kwargs)
+        vis.setup(p, string)
+        if manimce:
+            vis.render()
+        else:
+            vis.run()
+
     return
 
 if __name__ == '__main__':

@@ -5,6 +5,7 @@ except ImportError as e:
     from manim import *
     manimce = True
 import colour 
+# TODO: Prepend every constant name with YACV
 # Parsing parameters
 ACTION  = 'ACTION'
 ACCEPT  = 'ACC'

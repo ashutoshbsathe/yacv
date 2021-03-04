@@ -6,6 +6,7 @@ except ImportError as e:
     manimce = True
 import numpy as np 
 import pygraphviz as pgv
+import logging 
 from abstractsyntaxtree import AbstractSyntaxTree
 from grammar import *
 from ll1 import *
@@ -30,6 +31,7 @@ class GraphvizMobject(VGroup):
 
     # Manim grid is only 14x8, we need to fit the graphviz graph in this
     def gridify(self, x, y):
+        log = logging.getLogger('yacv')
         assert self.bounding_box is not None and len(self.bounding_box) == 4
         global MAX_AST_HEIGHT, MAX_AST_WIDTH
         bounding_box = self.bounding_box
@@ -48,11 +50,11 @@ class GraphvizMobject(VGroup):
             self.scale_x = new_width / width 
             self.scale_y = new_height / height 
             self.new_bbox = new_bbox 
-            print(self.new_bbox)
+            log.debug('New bbox = {}'.format(self.new_bbox))
         assert self.scale_x is not None and self.scale_y is not None 
         new_x = self.new_bbox[0] + self.scale_x * float(x) 
         new_y = self.new_bbox[1] + self.scale_y * float(y) 
-        print('({},{}) -> ({},{})'.format(x, y, new_x, new_y))
+        log.debug('({},{}) -> ({},{})'.format(x, y, new_x, new_y))
         return new_x, new_y 
 
     # https://codereview.stackexchange.com/questions/240710/pure-python-b%C3%A9zier-curve-implementation
@@ -78,18 +80,20 @@ class GraphvizMobject(VGroup):
         return np.array([x, y, z])
 
     def add_graph(self, graph):
+        log = logging.getLogger('yacv')
         if self.graph_added:
             # TODO: warn the user about already added graph via loggers
             return
         # g = self.graph 
         g = graph
         for n in g.nodes():
+            # TODO: Can we potentially make this easy to read ?
             replacement = '$\\epsilon$' if manimce else '\\epsilon'
             label = prepare_text(n.attr['label'])
             label = label.replace('&#x3B5;', replacement)
             dot = Tex('{{' + label + '}}')
             x, y = n.attr['pos'].split(',')
-            print(label)
+            log.debug('Label = {}'.format(label))
             x, y = self.gridify(x, y)
             dot.move_to(x*RIGHT + y*UP)
             if n.attr['fontcolor']:
@@ -97,7 +101,7 @@ class GraphvizMobject(VGroup):
             dot.scale(TEXT_SCALE)
             self.add(dot)
             self.nodes[str(n)] = dot 
-            print(64 * '-')
+            log.debug('End of iteration for adding a node')
         for e in g.edges():
             if e.attr['style'] == 'invis':
                 continue 
@@ -114,14 +118,15 @@ class GraphvizMobject(VGroup):
             self.add(path)
             key = '(' + str(e[0]) + ',' + str(e[1]) + ')'
             self.edges[key] = path 
-            print(64*'-')
+            log.debug('End of iteration for adding an edge')
         self.graph_added = True 
 
 def transform_graphviz_graphs(old, new):
+    log = logging.getLogger('yacv')
     common_nodes = set(old.nodes.keys()).intersection(set(new.nodes.keys()))
     common_edges = set(old.edges.keys()).intersection(set(new.edges.keys()))
-    print('Common nodes = {}'.format(common_nodes))
-    print('Common edges = {}'.format(common_edges))
+    log.debug('Common nodes = {}'.format(common_nodes))
+    log.debug('Common edges = {}'.format(common_edges))
     anims = []
 
     def is_equiv_vertices(n):
@@ -138,7 +143,7 @@ def transform_graphviz_graphs(old, new):
     for n in list(common_nodes):
         if is_equiv_vertices(n):
             anims.append(ReplacementTransform(old.nodes[n], new.nodes[n]))
-            print('Transforming from {} to {}'.format(old.nodes[n].get_center(), new.nodes[n].get_center()))
+            log.debug('Transforming from {} to {}'.format(old.nodes[n].get_center(), new.nodes[n].get_center()))
         else:
             anims.append(FadeOut(old.nodes[n]))
             anims.append(FadeIn(new.nodes[n]))
@@ -153,8 +158,8 @@ def transform_graphviz_graphs(old, new):
 
     old_nodes = set(old.nodes.keys()).difference(common_nodes)
     old_edges = set(old.edges.keys()).difference(common_edges)
-    print('Old nodes = {}'.format(old_nodes))
-    print('Old edges = {}'.format(old_edges))
+    log.debug('Old nodes = {}'.format(old_nodes))
+    log.debug('Old edges = {}'.format(old_edges))
     for n in list(old_nodes):
         print('Fading out {}'.format(old.nodes[n].get_center()))
         anims.append(FadeOut(old.nodes[n]))
@@ -164,10 +169,10 @@ def transform_graphviz_graphs(old, new):
 
     new_nodes = set(new.nodes.keys()).difference(common_nodes)
     new_edges = set(new.edges.keys()).difference(common_edges)
-    print('New nodes = {}'.format(new_nodes))
-    print('New edges = {}'.format(new_edges))
+    log.debug('New nodes = {}'.format(new_nodes))
+    log.debug('New edges = {}'.format(new_edges))
     for n in list(new_nodes):
-        print('Fading in {}'.format(new.nodes[n].get_center()))
+        log.debug('Fading in {}'.format(new.nodes[n].get_center()))
         anims.append(FadeIn(new.nodes[n]))
 
     for e in list(new_edges):

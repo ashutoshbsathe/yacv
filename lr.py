@@ -375,7 +375,7 @@ class LRParser(object):
         G.draw('sample.png')
         G.draw('sample.svg')
         G.draw('sample.dot')
-
+        log.info('LR parse tree successfully visualized')
         return G
 
     def visualize_automaton(self):
@@ -412,6 +412,7 @@ class LRParser(object):
         G.node_attr['margin'] = 0.05
         G.layout('dot')
         G.draw('sample.png')
+        log.info('LR parse tree successfully visualized')
         return G
 
 class LR0Parser(LRParser):

@@ -9,6 +9,7 @@ except ImportError as e:
     manimce = True 
 import pygraphviz as pgv
 import numpy as np
+import logging 
 from utils import *
 from constants import *
 from ll1 import *
@@ -18,12 +19,12 @@ import argparse
 from copy import deepcopy
 
 class LL1ParsingVisualizer(Scene):
-    def setup(self,grammar='ll1-expression-grammar.txt',string='id',**kwargs):
+    def setup(self, parser=None, string=None, **kwargs):
         if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
             super().setup(**kwargs)
             return
         # Add a parser type argument here in the future
-        self.grammar = grammar 
+        self.parser = parser 
         if isinstance(string, str):
             string = string.split(' ')
             string = [x for x in string if x]
@@ -36,7 +37,9 @@ class LL1ParsingVisualizer(Scene):
     def construct(self):
         # grid = ScreenGrid()
         # self.add(grid)
-        p = LL1Parser(self.grammar)
+        log = logging.getLogger('yacv')
+        p = self.parser
+        assert p is not None
         string = self.string 
         tree = AbstractSyntaxTree('S\'')
         curr_node_id = 0 # Assigning the node ids as we build the tree 
@@ -88,12 +91,15 @@ class LL1ParsingVisualizer(Scene):
             elif p.parsing_table.at[stack[-1].root.replace('\\$', '$'), a] !=\
                     ACCEPT:
                 prod = p.parsing_table.at[stack[-1].root, a][0]
-                print(prod)
+                log.info(prod)
+                log.info('{}, {}'.format(type(prod.rhs), prod.rhs))
+                log.info('{}'.format(prod.rhs[0] == EPSILON))
                 prod_text = '{} '.format(prod.lhs)
                 prod_text += '$\\rightarrow$' if manimce else '\\rightarrow'
                 if prod.rhs[0] == EPSILON:
                     prod_text += ' $\\epsilon$' if manimce else ' \\epsilon'
                 else:
+                    log.info('RHS is NOT EPSILON')
                     prod_text += ' {}'.format(''.join(prod.rhs)\
                             .replace('$', '\\$'))
                 new_status_mobject = Tex(prod_text)
@@ -120,7 +126,7 @@ class LL1ParsingVisualizer(Scene):
             string_text = [STRING_LEADER]
             string_text.extend([prepare_text(x) for x in string])
             string_text.append(']')
-            print(string_text)
+            log.debug(string_text)
             new_string_mobject = Tex(*string_text)
             new_string_mobject.arrange(RIGHT, buff=0.25)
             new_string_mobject[1].set_color(RED)
@@ -146,7 +152,7 @@ class LL1ParsingVisualizer(Scene):
             old_stack_mobject = curr_stack_mobject
             prev_mobject = curr_mobject 
             # Ending Animations 
-            print(popped_stack)
+            log.debug(popped_stack)
         new_status_mobject = Tex('ACCEPT')
         new_status_mobject.scale(STATUS_SCALE)
         new_status_mobject.move_to(status_pos)
@@ -159,12 +165,12 @@ class LL1ParsingVisualizer(Scene):
 
 
 class LRParsingVisualizer(Scene):
-    def setup(self, grammar='expression-grammar.txt', string='id', **kwargs):
+    def setup(self, parser=None, string=None, **kwargs):
         if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
             super().setup(**kwargs)
             return
         # Add a parser type argument here in the future
-        self.grammar = grammar 
+        self.parser = parser
         if isinstance(string, str):
             string = string.split(' ')
             string = [x for x in string if x]
@@ -177,8 +183,10 @@ class LRParsingVisualizer(Scene):
     def construct(self):
         # grid = ScreenGrid()
         # self.add(grid)
-        p = LALR1Parser(self.grammar)
+        p = self.parser 
+        assert p is not None 
         string = self.string 
+        log = logging.getLogger('yacv')
         stack = [0]
         old_stack_mobject = None
         prev_mobject = None 
@@ -190,7 +198,7 @@ class LRParsingVisualizer(Scene):
         string_text = [STRING_LEADER]
         string_text.extend([prepare_text(x) for x in string])
         string_text.append(']')
-        print(string_text)
+        log.debug(string_text)
         string_mobject = Tex(*string_text)
         string_mobject.arrange(RIGHT, buff=0.25)
         string_pos = 0*LEFT + 3.5*DOWN
@@ -266,6 +274,7 @@ class LRParsingVisualizer(Scene):
             elif entry[0] == 'r':
                 prod_id = int(entry[1:])
                 prod = p.grammar.prods[prod_id]
+                log.info(prod)
                 new_tree = AbstractSyntaxTree(prod.lhs)
                 new_tree.prod_id = prod_id 
                 new_tree.node_id = curr_node_id 
