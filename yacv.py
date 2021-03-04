@@ -1,6 +1,27 @@
+try:
+    from manimlib import *
+    manimce = False
+except:
+    from manim import *
+    manimce = True
 import argparse
-import logging 
-from utils import setup_logger, YACVError 
+import logging
+import os 
+from grammar import Grammar
+from utils import setup_logger, YACVError
+from ll1 import LL1Parser
+from lr import LR0Parser, SLR1Parser, LALR1Parser, LR1Parser
+
+parser_map = {
+    'll1'  : LL1Parser,
+    'lr0'  : LR0Parser,
+    'slr1' : SLR1Parser,
+    'lalr1': LALR1Parser,
+    'lr1'  : LR1Parser
+}
+
+ROOT_DIR = 'yacv_{grammar}'
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--grammar', help='Path to text file containing grammar rules')
@@ -24,12 +45,41 @@ def parse_args():
     return args
 
 def main():
+    global ROOT_DIR
     setup_logger()
     log = logging.getLogger('yacv')
     args = parse_args()
     if not args.grammar or not args.string:
         log.fatal('Please provide both grammar and string') 
         exit(1)
+    if args.parsing_algo == 'll1' and args.vis_automaton:
+        log.fatal('LR state automaton does not exist for LL(1) parsing')
+        exit(1)
+    log.info('Using {} parsing algorithm'.format(
+        args.parsing_algo.upper()))
+    p = parser_map[args.parsing_algo](args.grammar)
+
+    # Prepare the main directories
+    grammar = ''.join(args.grammar.split('/')[-1].split('.')[:-1])
+    ROOT_DIR = ROOT_DIR.format(grammar=grammar)
+    folder = os.path.join(ROOT_DIR, args.parsing_algo)
+    os.makedirs(folder, exist_ok=True)
+    if args.parsing_table:
+        fname = '{}-parsing-table.csv'.format(args.parsing_algo)
+        p.parsing_table.to_csv(os.path.join(folder, fname))
+    if args.vis_automaton:
+        fname = '{}-state-automaton.pdf'.format(args.parsing_algo)
+        G = p.visualize_automaton()
+        G.draw(os.path.join(folder, fname))
+    string = args.string.split(' ')
+    if string[-1] != '$':
+        string.append('$')
+    if args.vis_tree:
+        string_folder = ''.join(string)
+        string_folder = os.path.join(folder, string_folder)
+        os.makedirs(string_folder, exist_ok=True)
+        G = p.visualize_syntaxtree(string)
+        G.draw(os.path.join(string_folder, fname))
     return
 
 if __name__ == '__main__':

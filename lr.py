@@ -412,6 +412,7 @@ class LRParser(object):
         G.node_attr['margin'] = 0.05
         G.layout('dot')
         G.draw('sample.png')
+        return G
 
 class LR0Parser(LRParser):
     # TODO: Can we support epsilon LR(0) parsers ?

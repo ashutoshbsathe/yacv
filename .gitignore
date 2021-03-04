@@ -1,3 +1,5 @@
+# Ignore the yacv_ output folders
+yacv_*/
 # Ignore the sample graph visualizations
 sample.png
 output.png
