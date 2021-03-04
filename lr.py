@@ -465,7 +465,7 @@ class LR0Parser(LRParser):
         # print(self.is_valid)
         self.parsing_table_built = True
         if not self.is_valid:
-            raise YACVError('Grammar is not LR(0)')
+            log.warning('Grammar is not LR(0)')
         else:
             log.info('Parsing table built successfully')
 
@@ -514,7 +514,7 @@ class SLR1Parser(LR0Parser):
         # print(self.is_valid)
         self.parsing_table_built = True
         if not self.is_valid:
-            raise YACVError('Grammar is not LR(0)')
+            log.warning('Grammar is not SLR(1)')
         else:
             log.info('Parsing table built successfully')
 
@@ -575,7 +575,7 @@ class LR1Parser(LRParser):
         self.parsing_table_built = True
         self.parsing_table.to_csv('parsing_table.csv')
         if not self.is_valid:
-            raise YACVError('Grammar cannot be parsed by your chosen method')
+            log.warning('Grammar is not valid')
         else:
             log.info('Parsing table built successfully')
 

@@ -43,13 +43,12 @@ class LL1Parser(object):
         if self.is_ll1:
             logging.getLogger('yacv').info('LL(1) parsing table successfully generated')
         else:
-            # TODO: maybe save the parsing table for further analysis ?
-            raise YACVError('Grammar is not LL(1). 2 or more entries present in at least one cell in parsing table')
+            logging.getLogger('yacv').warning('Grammar is not LL(1). 2 or more entries present in at least one cell in parsing table')
 
     def parse(self, string):
         log = logging.getLogger('yacv')
         if not self.is_ll1:
-            log.warn('Grammar is not LL(1). The parsing may run into infinite loop')
+            raise YACVError('Grammar is not LL(1). The parsing cannot proceed')
         # string: list of terminals
         if string[-1] != '$':
             string.append('$')
