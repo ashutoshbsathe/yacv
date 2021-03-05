@@ -1,0 +1,5 @@
+source "https://rubygems.org"
+
+gem "just-the-docs", "~> 0.2.8"
+gem 'jemoji'
+gem "github-pages", group: :jekyll_plugins

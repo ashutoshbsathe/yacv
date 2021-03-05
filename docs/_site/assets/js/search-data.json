@@ -1,0 +1,32 @@
+{"0": {
+    "doc": "Home",
+    "title": "yacv: Yet Another Compiler Visualizer",
+    "content": " ",
+    "url": "http://localhost:4000/yacv/#yacv-yet-another-compiler-visualizer",
+    "relUrl": "/#yacv-yet-another-compiler-visualizer"
+  },"1": {
+    "doc": "Home",
+    "title": "ManimGL vs ManimCE",
+    "content": " ",
+    "url": "http://localhost:4000/yacv/#manimgl-vs-manimce",
+    "relUrl": "/#manimgl-vs-manimce"
+  },"2": {
+    "doc": "Home",
+    "title": "LL(1) parsing",
+    "content": "Grammar: ll1-expression-grammar . String: id + id * id / id - id . ManimGL rendering . Your browser does not support video tag ManimCE rendering . Your browser does not support video tag ",
+    "url": "http://localhost:4000/yacv/#ll1-parsing",
+    "relUrl": "/#ll1-parsing"
+  },"3": {
+    "doc": "Home",
+    "title": "LALR(1) parsing",
+    "content": "Grammar: expression-grammar . String: id + id * id / id - id . ManimGL rendering . Your browser does not support video tag ManimCE rendering . Your browser does not support video tag ",
+    "url": "http://localhost:4000/yacv/#lalr1-parsing",
+    "relUrl": "/#lalr1-parsing"
+  },"4": {
+    "doc": "Home",
+    "title": "Home",
+    "content": " ",
+    "url": "http://localhost:4000/yacv/",
+    "relUrl": "/"
+  }
+}
