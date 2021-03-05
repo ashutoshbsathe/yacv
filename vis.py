@@ -23,7 +23,6 @@ class LL1ParsingVisualizer(Scene):
         if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
             super().setup(**kwargs)
             return
-        # Add a parser type argument here in the future
         self.parser = parser 
         if isinstance(string, str):
             string = string.split(' ')

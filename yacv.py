@@ -7,6 +7,7 @@ except:
 import argparse
 import logging
 import os 
+from copy import deepcopy 
 from grammar import Grammar
 from utils import setup_logger, get_manim_config
 from ll1 import LL1Parser
@@ -81,7 +82,7 @@ def main():
         string_folder = os.path.join(folder, string_folder)
         os.makedirs(string_folder, exist_ok=True)
         fname = 'abstractsyntaxtree.pdf'
-        G = p.visualize_syntaxtree(string)
+        G = p.visualize_syntaxtree(deepcopy(string))
         G.draw(os.path.join(string_folder, fname))
         log.info('Syntax tree visualized to {}'.format(os.path.join(folder, fname)))
     if args.vis_parsing:
@@ -100,7 +101,7 @@ def main():
             kwargs = manim_config 
         vis = LL1ParsingVisualizer(**kwargs) if args.parsing_algo == \
                 'll1' else LRParsingVisualizer(**kwargs)
-        vis.setup(p, string)
+        vis.setup(p, deepcopy(string))
         if manimce:
             vis.render()
         else:
