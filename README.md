@@ -8,3 +8,5 @@ Interesting reads:
 yacv does not do syntax directed translation
 
 [SemVer](https://semver.org/) grammar can be interesting to test
+
+[Issue with manim install ?](https://github.com/pygobject/pycairo/issues/148#issuecomment-770024652)

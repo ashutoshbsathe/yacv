@@ -36,8 +36,6 @@ class LL1ParsingVisualizer(Scene):
         super().setup(**kwargs)
 
     def construct(self):
-        # grid = ScreenGrid()
-        # self.add(grid)
         log = logging.getLogger('yacv')
         p = self.parser
         assert p is not None
@@ -180,8 +178,6 @@ class LRParsingVisualizer(Scene):
         super().setup(**kwargs)
 
     def construct(self):
-        # grid = ScreenGrid()
-        # self.add(grid)
         p = self.parser 
         assert p is not None 
         string = self.string 
@@ -303,8 +299,6 @@ class LRParsingVisualizer(Scene):
                 new_status_mobject.scale(YACV_MANIM_STATUS_SCALE)
                 self.play(Transform(status_mobject, new_status_mobject))
                 self.play(ShowCreationThenDestructionAround(new_status_mobject))
-                # self.play(Transform(status_mobject, \
-                #        new_status_mobject))
                 self.wait(1)
                 self.remove(new_status_mobject)
                 # Ending animation

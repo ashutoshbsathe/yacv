@@ -16,7 +16,7 @@ from yacv.utils import *
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):
-        # digest_config doesn't work in CE
+        # digest_config doesn't work in ManimCE
         # digest_config(self, kwargs, locals())
         super().__init__(**kwargs)
         self.new_bbox = None
@@ -84,7 +84,6 @@ class GraphvizMobject(VGroup):
         if self.graph_added:
             # TODO: warn the user about already added graph via loggers
             return
-        # g = self.graph 
         g = graph
         for n in g.nodes():
             # TODO: Can we potentially make this easy to read ?
@@ -130,8 +129,6 @@ def transform_graphviz_graphs(old, new):
     anims = []
 
     def is_equiv_vertices(n):
-        # return int(n) < 0 or old.graph.get_node(n).attr['label'][0] == \
-        #         new.graph.get_node(n).attr['label'][0] 
         # manimce does not strip the extra {{ }} from the latex
         if manimce:
             return int(n) < 0 or old.nodes[n].tex_string[2] == \
@@ -161,7 +158,7 @@ def transform_graphviz_graphs(old, new):
     log.debug('Old nodes = {}'.format(old_nodes))
     log.debug('Old edges = {}'.format(old_edges))
     for n in list(old_nodes):
-        print('Fading out {}'.format(old.nodes[n].get_center()))
+        log.debug('Fading out {}'.format(old.nodes[n].get_center()))
         anims.append(FadeOut(old.nodes[n]))
 
     for e in list(old_edges):
@@ -289,31 +286,6 @@ def stack_to_graphviz(stack, grammar):
     ret.layout('dot')
     ret.draw('sample.png')
     return ret
-
-# Kanged from https://www.youtube.com/watch?v=gIvQsqXy5os&list=PL2B6OzTsMUrwo4hA3BBfS7ZR34K361Z8F&index=13
-class Grid(VGroup):
-    CONFIG = {
-        "height": 6.0,
-        "width": 6.0,
-    }
-
-    def __init__(self, rows, columns, **kwargs):
-        digest_config(self, kwargs, locals())
-        super().__init__(**kwargs)
-
-        x_step = self.width / self.columns
-        y_step = self.height / self.rows
-
-        for x in np.arange(0, self.width + x_step, x_step):
-            self.add(Line(
-                [x - self.width / 2., -self.height / 2., 0],
-                [x - self.width / 2., self.height / 2., 0],
-            ))
-        for y in np.arange(0, self.height + y_step, y_step):
-            self.add(Line(
-                [-self.width / 2., y - self.height / 2., 0],
-                [self.width / 2., y - self.height / 2., 0]
-            ))
 
 def coord(x, y, z=0):
     return np.array([x, y, z])

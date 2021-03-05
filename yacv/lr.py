@@ -135,8 +135,6 @@ class LRParser(object):
                     f = first(self.grammar, 
                             item.production.rhs[item.dot_pos+1:])
                     if not f or YACV_EPSILON in f:
-                        # f = f.union(set(item.lookaheads).difference(['$']))
-                        # else:
                         f = f.union(set(item.lookaheads))
                     f = f.difference([YACV_EPSILON])
                 else:
@@ -169,7 +167,6 @@ class LRParser(object):
         if self.automaton_built:
             log.warn('Automaton is already built!')
             return
-        # init = LRAutomatonState(self.closure(LRItem(self.grammar.prods[0], 0)))
         self.automaton_states.append(init)
         self.automaton_transitions[0] = OrderedDict()
         visited_states = []
@@ -190,7 +187,6 @@ class LRParser(object):
                 item.dot_pos += 1
                 item.update_reduce()
                 next_symbols[key].append(item)
-            # pprint(next_symbols)
             for key, items in next_symbols.items():
                 next_state = LRAutomatonState(self.closure(items))
                 log.debug(next_state)
@@ -209,8 +205,6 @@ class LRParser(object):
                     log.debug('State {} is already visited'.format(next_state))
                 next_idx = self.automaton_states.index(next_state)
                 self.automaton_transitions[curr_idx][key] = next_idx
-                # print(32 * '-')
-            # print(64*'-')
         log.debug('to_visit = empty')
         self.automaton_built = True
 
@@ -272,10 +266,10 @@ class LRParser(object):
                 prod = self.grammar.prods[0]
                 assert prod.rhs[-1] == '$' and len(prod.rhs) == 2
                 if not stack:
-                    raise ValueError() # Not sure if we need this here
+                    raise ValueError() # TODO: Convert this to YACVError stating an error has occurred due to stack becoming empty prematurely
                 stack.pop(-1)
                 if not stack:
-                    raise ValueError() # Not sure if we need this here
+                    raise ValueError() # TODO: Convert this to YACVError stating an error has occurred due to stack becoming empty prematurely
                 tree = stack.pop(-1)
                 log.info('Parse successful')
                 log.debug('Final tree = {}'.format(tree))
@@ -284,9 +278,6 @@ class LRParser(object):
             else:
                 raise YACVError('Unknown error while parsing')
                 break
-            # print(stack)
-            # print(string)
-            # print(64 *'-')
 
     def visualize_syntaxtree(self, string):
         log = logging.getLogger('yacv')
@@ -308,10 +299,7 @@ class LRParser(object):
                 color = YACV_GRAPHVIZ_COLORS[top.prod_id % len(YACV_GRAPHVIZ_COLORS)]
                 G.get_node(node).attr['fontcolor'] = color
             desc_ids = []
-            # G.get_node(node).attr['label'] += ', {}'.format(top.prod_id)
-            # pprint(top.desc)
             for desc in top.desc:
-                # pprint(desc)
                 if desc.root == YACV_EPSILON:
                    label = G.get_node(node).attr['label'] 
                    label = '<' + label + ' = &#x3B5;>'
@@ -337,11 +325,8 @@ class LRParser(object):
                 log.debug(node.attr['label'])
                 for i in range(len(G.successors(node))-1, -1, -1):
                     stack.append(G.successors(node)[i])
-                # stack.extend(G.successors(node))
-        # print(terminal_nodes)
         for i, prod in enumerate(prods):
             nonterminals = []
-            # print(i, prod)
             for node_id in prod:
                 if G.get_node(node_id).attr['label'] in terminals:
                     continue
@@ -374,9 +359,6 @@ class LRParser(object):
         G.node_attr['margin'] = 0.1
         G.layout('dot')
 
-        G.draw('sample.png')
-        G.draw('sample.svg')
-        G.draw('sample.dot')
         log.info('LR parse tree successfully visualized')
         return G
 
@@ -401,19 +383,16 @@ class LRParser(object):
             else:
                 G.add_node(i, label=label)
                 log.debug('Added node')
-            # print(64*'-')
         G.add_edge(-1, 0)
         for state, transitions in self.automaton_transitions.items():
             for symbol, new_state in transitions.items():
                 G.add_edge(state, new_state, label=symbol)
 
-        G.write('sample.dot')
         G.node_attr['shape'] = 'box'
         G.node_attr['height'] = 0
         G.node_attr['width'] = 0
         G.node_attr['margin'] = 0.05
         G.layout('dot')
-        G.draw('sample.png')
         log.info('LR automaton successfully visualized')
         return G
 
@@ -465,8 +444,6 @@ class LR0Parser(LRParser):
                 if len(self.parsing_table.at[state_id, col]) > 1:
                     self.is_valid = False
 
-        # pprint(self.parsing_table)
-        # print(self.is_valid)
         self.parsing_table_built = True
         if not self.is_valid:
             log.warning('Grammar is not LR(0)')
@@ -514,8 +491,6 @@ class SLR1Parser(LR0Parser):
                 if len(self.parsing_table.at[state_id, col]) > 1:
                     self.is_valid = False
 
-        # pprint(self.parsing_table)
-        # print(self.is_valid)
         self.parsing_table_built = True
         if not self.is_valid:
             log.warning('Grammar is not SLR(1)')
@@ -574,8 +549,6 @@ class LR1Parser(LRParser):
                 self.parsing_table.at[state_id, col].append(entry)
                 if len(self.parsing_table.at[state_id, col]) > 1:
                     self.is_valid = False
-        # pprint(self.parsing_table)
-        # print(self.is_valid)
         self.parsing_table_built = True
         self.parsing_table.to_csv('parsing_table.csv')
         if not self.is_valid:
@@ -610,8 +583,6 @@ class LALR1Parser(LR1Parser):
                 }
                 state_id += 1
             state_core_dict[core]['state_list'].append(i)
-        # pprint(state_core_dict)
-        # pprint(len(state_core_dict.keys()))
         new_states = []
         for key, info in state_core_dict.items():
             states = info['state_list']
@@ -632,12 +603,7 @@ class LALR1Parser(LR1Parser):
             new_states.append(new_state)
             new_states[-1].update_shift_reduce_items()
             new_states[-1].update_conflicts()
-        """
-        for state in new_states:
-            print(str(state))
-            print(64*'-')
-        pprint(len(new_states))
-        """
+
         new_automaton_transitions = OrderedDict()
         for state_id, info in self.automaton_transitions.items():
             core = get_core(self.automaton_states[state_id])
@@ -649,8 +615,6 @@ class LALR1Parser(LR1Parser):
                 next_state_id = state_core_dict[core]['state_id']
                 new_automaton_transitions[curr_state_id][symbol] = \
                         next_state_id 
-        # pprint(self.automaton_transitions)
-        # pprint(new_automaton_transitions)
         self.automaton_states = new_states 
         self.automaton_transitions = new_automaton_transitions
         self.automaton_built = True

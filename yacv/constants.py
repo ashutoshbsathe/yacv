@@ -43,7 +43,7 @@ YACV_MANIM_MAX_STACK_VIS  = 6
 YACV_MANIM_TEXT_SCALE     = 0.5
 YACV_MANIM_STATUS_SCALE   = 0.6
 YACV_MANIM_STRING_SCALE   = 0.5
-YACV_MANIM_STRING_LEADER  = '\\textbf{String} $\\rightarrow$ [' if \
+YACV_MANIM_STRING_LEADER  = '\\textbf{String} $\\rightarrow$ \\textbf{[}' if \
                                 manimce else \
                             'String \\rightarrow ['
 
@@ -61,7 +61,6 @@ yacv_manimce_config =  {
     'frame_width': 14.222222222222221,
     'from_animation_number': 0,
     'images_dir': '{media_dir}/images/{module_name}',
-    'input_file': '/home/ashutosh/parser-vis/vis.py',
     'leave_progress_bars': False,
     'log_dir': '{media_dir}/logs',
     'log_to_file': False,

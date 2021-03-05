@@ -39,16 +39,7 @@ def first(g, s):
             continue
         x = first(g, rhs)
         ret = ret.union(x)
-        """
-        i = 0
-        while YACV_EPSILON in x:
-            # note that, if all the symbols are nullable
-            # then i will exceed list length
-            # this is handled in the base case of recursion
-            x = first(g, rhs[i+1:])
-            i += 1
-            ret = ret.union(x)
-        """
+
     if YACV_EPSILON in ret:
         x = first(g, s[1:])
         ret = ret.union(x)

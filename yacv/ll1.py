@@ -38,7 +38,6 @@ class LL1Parser(object):
                         self.parsing_table.at[lhs, symbol].append(prod)
                         if len(self.parsing_table.at[lhs, symbol]) > 1:
                             self.is_ll1 = False
-        # pprint(self.parsing_table)
         if self.is_ll1:
             logging.getLogger('yacv').info('LL(1) parsing table successfully generated')
         else:
@@ -51,7 +50,6 @@ class LL1Parser(object):
         # string: list of terminals
         if string[-1] != '$':
             string.append('$')
-        # stack = ['S\'']
         stack = [AbstractSyntaxTree('S\'')]
         popped_stack = []
         while stack[-1].root != '$':
@@ -103,7 +101,6 @@ class LL1Parser(object):
                 color = YACV_GRAPHVIZ_COLORS[top.prod_id % len(YACV_GRAPHVIZ_COLORS)]
                 G.get_node(node).attr['fontcolor'] = color
             desc_ids = []
-            # G.get_node(node).attr['label'] += ', {}'.format(top.prod_id)
             for desc in top.desc:
                 if desc.root == YACV_EPSILON:
                    label = G.get_node(node).attr['label'] 
@@ -165,12 +162,8 @@ class LL1Parser(object):
         G.node_attr['margin'] = 0.1
         G.layout('dot')
 
-        G.draw('sample.png')
-        G.draw('sample.svg')
         log.info('Parse tree successfully visualized')
         return G
-        # print(tree)
-        # print(G.string())
 
 
 
