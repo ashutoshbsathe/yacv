@@ -26,12 +26,16 @@ class LL1Parser(object):
         for prod in self.grammar.prods:
             lhs, rhs = prod.lhs, prod.rhs
             first_rhs = first(self.grammar, rhs)
+            if self.grammar.nonterminals[lhs]['nullable']:
+                first_rhs = first_rhs.union(set([YACV_EPSILON]))
+            else:
+                first_rhs = first_rhs.difference(set([YACV_EPSILON]))
             for terminal in first_rhs:
                 if terminal is not YACV_EPSILON:
                     if self.parsing_table.at[lhs, terminal] == YACV_ERROR:
                         self.parsing_table.at[lhs, terminal] = []
                     self.parsing_table.at[lhs, terminal].append(prod)
-                else:
+                elif prod.rhs[0] == YACV_EPSILON:
                     for symbol in self.grammar.nonterminals[lhs]['follow']:
                         if self.parsing_table.at[lhs, symbol] == YACV_ERROR:
                             self.parsing_table.at[lhs, symbol] = []
@@ -46,6 +50,7 @@ class LL1Parser(object):
     def parse(self, string):
         log = logging.getLogger('yacv')
         if not self.is_ll1:
+            print(self.grammar.nonterminals)
             raise YACVError('Grammar is not LL(1). The parsing cannot proceed')
         # string: list of terminals
         if string[-1] != '$':
@@ -77,6 +82,9 @@ class LL1Parser(object):
                         stack.append(desc_list[i])
                 log.debug(list(reversed(stack)))
                 log.debug('End of iteration' + 16*'-')
+        if len(string) > 0 and string[0] != '$':
+            raise YACVError('Cannot parse the remainder of string {}'.format(
+                ''.join(string)))
         return popped_stack[0]
     
     def visualize_syntaxtree(self, string):

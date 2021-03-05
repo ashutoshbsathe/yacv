@@ -103,9 +103,32 @@ class Grammar(object):
         # inefficient method, but should work fine for most small grammars
         for nt in self.nonterminals.keys():
             tmp = first(self, [nt])
-            if YACV_EPSILON in tmp:
-                self.nonterminals[nt]['nullable'] = True
             self.nonterminals[nt]['first'] = tmp
+            for prod_id in self.nonterminals[nt]['prods_lhs']:
+                if self.prods[prod_id].rhs[0] == YACV_EPSILON:
+                    self.nonterminals[nt]['nullable'] = True 
+        
+        changed = True
+        while changed:
+            changed = False 
+            for nt in self.nonterminals.keys():
+                for prod_id in self.nonterminals[nt]['prods_lhs']:
+                    rhs = self.prods[prod_id].rhs
+                    count = 0
+                    for symbol in rhs:
+                        if symbol in self.nonterminals.keys() and \
+                        self.nonterminals[symbol]['nullable']:
+                            count += 1
+                    if count == len(rhs) and not self.nonterminals[nt]['nullable']:
+                        self.nonterminals[nt]['nullable'] = True
+                        changed = True
+
+        for nt in self.nonterminals.keys():
+            f = self.nonterminals[nt]['first']
+            if self.nonterminals[nt]['nullable']:
+                self.nonterminals[nt]['first'] = f.union(set([YACV_EPSILON]))
+            else:
+                self.nonterminals[nt]['first'] = f.difference(set([YACV_EPSILON]))
 
     def build_follow(self):
         log = logging.getLogger('yacv')

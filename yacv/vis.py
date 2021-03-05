@@ -343,7 +343,10 @@ class LRParsingVisualizer(Scene):
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
                         p.grammar))
-                anim_t = transform_graphviz_graphs(prev_mobject, curr_mobject)
+                if prev_mobject == None:
+                    anim_t = [ShowCreation(curr_mobject)]
+                else:
+                    anim_t = transform_graphviz_graphs(prev_mobject, curr_mobject)
                 all_anims.extend(anim_s)
                 all_anims.extend(anim_t)
                 self.play(*all_anims)

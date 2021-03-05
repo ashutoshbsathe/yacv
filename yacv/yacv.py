@@ -4,10 +4,11 @@ try:
 except:
     from manim import *
     manimce = True
-import argparse
 import logging
 import os 
+import sys 
 from copy import deepcopy 
+import yaml
 from yacv.grammar import Grammar
 from yacv.utils import setup_logger, get_manim_config
 from yacv.ll1 import LL1Parser
@@ -22,28 +23,49 @@ parser_map = {
 }
 
 ROOT_DIR = 'yacv_{grammar}'
+HELP_MESSAGE = """-------------------------------------
+yacv: Yet Another Compiler Visualizer
+-------------------------------------
+usage: yacv <path/to/config/file>
 
+-------------------------------------
+Project URL : https://github.com/ashutoshbsathe/yacv
+Config spec : https://ashutoshbsathe.github.io/yacv/config 
+"""
 def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--grammar', help='Path to text file containing grammar rules')
-    parser.add_argument('--string', help='String to parse')
-    parser.add_argument('--parsing-algo', default='lr1', \
-            choices=['ll1', 'lr0', 'slr1', 'lr1', 'lalr1'], \
-            help='Name of the parsing algorithm to use')
-    parser.add_argument('--vis-tree', default=False, \
-            action='store_true', help='Visualize syntaxtree') 
-    parser.add_argument('--vis-automaton', default=False, \
-            action='store_true', help='Visualize LR automaton') 
-    parser.add_argument('--parsing-table', default=False, \
-            action='store_true', help='Export parsing table')
-    parser.add_argument('--vis-parsing', default=False, \
-            action='store_true', \
-            help='Visualize parsing process using manim')
-    parser.add_argument('--manim-video-quality', default='480p', \
-            choices=['480p', '720p', '1080p', '1440p', '2160p'], \
-            help='Video quality for manim rendering')
-    args = parser.parse_args()
-    return args
+    class Namespace(object):
+        def __init__(self, **kwargs):
+            choices = {
+                'parsing_algo': ['ll1', 'lr0', 'slr1', 'lr1', 'lalr1'],
+                'manim_video_quality': ['480p', '720p', '1080p', '1440p', '2160p']
+            }
+            store_true = ['vis_tree', 'vis_parsing', 'vis_automaton', 'parsing_table']
+            for k, v in kwargs.items():
+                key = k.replace('-', '_')
+                if key in choices and v not in choices[key]:
+                    raise ValueError('Incorrect config value. Attribute {} must be one out of {}, received "{}"'.format(k, choices[key], v))
+                if key in store_true:
+                    v = bool(v)
+                self.__dict__[k.replace('-','_')] = v
+            for k in store_true:
+                if not hasattr(self, k):
+                    self.__dict__[k] = False 
+            if not hasattr(self, 'manim_video_quality'):
+                self.manim_video_quality = '480p'
+            if not hasattr(self, 'grammar') or not hasattr(self, 'string'):
+                raise ValueError('Please specify both grammar and string in config')
+
+        def __str__(self):
+            ret = 'Namespace(\n'
+            for k, v in self.__dict__.items():
+                ret += '\t{} : {}\n'.format(k, v)
+            ret += ')\n'
+            return ret
+    if len(sys.argv) != 2:
+        print(HELP_MESSAGE, file=sys.stderr)
+        sys.exit(1)
+    args = yaml.safe_load(open(sys.argv[1]).read())
+    return Namespace(**args)
 
 def main():
     global ROOT_DIR
@@ -106,8 +128,8 @@ def main():
             vis.render()
         else:
             vis.run()
-
-    return
+    log.info('YACV finished')
+    return 
 
 if __name__ == '__main__':
     main()
