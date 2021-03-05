@@ -11,8 +11,13 @@ setup(name='yacv',
       author='Ashutosh Sathe',
       author_email='2ashutoshbs@gmail.com',
       url='https://github.com/ashutoshbsathe/yacv',
-      install_requires=['pygraphviz', 'manim'],
+      install_requires=['pandas', 'pygraphviz', 'manim'],
       license='MIT',
       packages=find_packages(),
+      entry_points={
+        'console_scripts': [
+            'yacv = yacv.__main__:main',
+        ]
+      },
       zip_safe=False)
 

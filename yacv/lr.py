@@ -219,6 +219,8 @@ class LRParser(object):
 
     def parse(self, string):
         log = logging.getLogger('yacv')
+        if not self.is_valid:
+            raise YACVError('Given grammar is not valid for chosen parsing algorithm. Parsing will not continue')
         # page 7 at below link is really helpful
         # https://www2.cs.duke.edu/courses/spring02/cps140/lects/sectlrparseS.pdf
         assert self.parsing_table_built
@@ -412,7 +414,7 @@ class LRParser(object):
         G.node_attr['margin'] = 0.05
         G.layout('dot')
         G.draw('sample.png')
-        log.info('LR parse tree successfully visualized')
+        log.info('LR automaton successfully visualized')
         return G
 
 class LR0Parser(LRParser):
@@ -452,7 +454,7 @@ class LR0Parser(LRParser):
                                 self.is_valid = False
             for symbol, new_state_id in transitions.items():
                 if symbol in terminals:
-                    entry = SHIFT + str(new_state_id)
+                    entry = YACV_SHIFT + str(new_state_id)
                     col = (YACV_ACTION, symbol)
                 else:
                     entry = str(new_state_id)
@@ -501,7 +503,7 @@ class SLR1Parser(LR0Parser):
                                 self.is_valid = False
             for symbol, new_state_id in transitions.items():
                 if symbol in terminals:
-                    entry = SHIFT + str(new_state_id)
+                    entry = YACV_SHIFT + str(new_state_id)
                     col = (YACV_ACTION, symbol)
                 else:
                     entry = str(new_state_id)

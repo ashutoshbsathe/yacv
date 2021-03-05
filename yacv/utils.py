@@ -8,7 +8,7 @@ import logging
 import os 
 from rich.traceback import install
 from rich.logging import RichHandler 
-from yacv,constants import yacv_manimce_config, yacv_manim_config
+from yacv.constants import yacv_manimce_config, yacv_manim_config
 class YACVError(Exception):
     pass
 

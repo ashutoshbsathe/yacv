@@ -24,6 +24,8 @@ class LL1ParsingVisualizer(Scene):
             super().setup(**kwargs)
             return
         self.parser = parser 
+        if not parser.is_ll1:
+            raise YACVError('Grammar is not valid for chosen parsing algorithm. Parsing will not continue')
         if isinstance(string, str):
             string = string.split(' ')
             string = [x for x in string if x]
@@ -165,8 +167,9 @@ class LRParsingVisualizer(Scene):
         if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
             super().setup(**kwargs)
             return
-        # Add a parser type argument here in the future
         self.parser = parser
+        if not parser.is_valid:
+            raise YACVError('Grammar is not valid for chosen parsing algorithm. Parsing is not continue')
         if isinstance(string, str):
             string = string.split(' ')
             string = [x for x in string if x]
