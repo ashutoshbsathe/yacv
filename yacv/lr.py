@@ -1,12 +1,12 @@
-from grammar import Grammar, first
-from abstractsyntaxtree import AbstractSyntaxTree
+import logging
+import pandas as pd
 from pprint import pprint
 from copy import deepcopy
 from collections import OrderedDict
-import pandas as pd
-from constants import *
-import logging
-from utils import YACVError
+from yacv.grammar import Grammar, first
+from yacv.abstractsyntaxtree import AbstractSyntaxTree
+from yacv.utils import YACVError
+from yacv.constants import *
 class LRItem(object):
     def __init__(self, production=None, dot_pos=0, lookaheads=[]):
         self.production = production

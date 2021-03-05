@@ -7,12 +7,12 @@ except ImportError as e:
 import numpy as np 
 import pygraphviz as pgv
 import logging 
-from abstractsyntaxtree import AbstractSyntaxTree
-from grammar import *
-from ll1 import *
-from lr import *
-from constants import *
-from utils import *
+from yacv.abstractsyntaxtree import AbstractSyntaxTree
+from yacv.grammar import *
+from yacv.ll1 import *
+from yacv.lr import *
+from yacv.constants import *
+from yacv.utils import *
 class GraphvizMobject(VGroup):
     # do note that graph must have .layout() called on it already
     def __init__(self, graph, **kwargs):

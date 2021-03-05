@@ -8,11 +8,11 @@ import argparse
 import logging
 import os 
 from copy import deepcopy 
-from grammar import Grammar
-from utils import setup_logger, get_manim_config
-from ll1 import LL1Parser
-from lr import LR0Parser, SLR1Parser, LALR1Parser, LR1Parser
-from vis import LL1ParsingVisualizer, LRParsingVisualizer
+from yacv.grammar import Grammar
+from yacv.utils import setup_logger, get_manim_config
+from yacv.ll1 import LL1Parser
+from yacv.lr import LR0Parser, SLR1Parser, LALR1Parser, LR1Parser
+from yacv.vis import LL1ParsingVisualizer, LRParsingVisualizer
 parser_map = {
     'll1'  : LL1Parser,
     'lr0'  : LR0Parser,

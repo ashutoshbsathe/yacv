@@ -1,7 +1,7 @@
+import logging 
 from collections import OrderedDict
 from pprint import pprint
-from constants import *
-import logging 
+from yacv.constants import *
 class Production(object):
     def __init__(self, lhs=None, rhs=[]):
         self.lhs = lhs
