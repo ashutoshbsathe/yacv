@@ -31,11 +31,11 @@ Using the canonical LR(1) parsing method, `yacv` can produce the following:
 
 ### Syntax Tree
 
-![ast-simple-cd-grammar](images/ast-simple-cd-grammar.png)
+![ast-simple-cd-grammar](imgs/ast-simple-cd-grammar.png)
 
 ### LR(1) Automaton
 
-![lr1-automata-simple-cd-grammar](images/lr1-automata-simple-cd-grammar.png)
+![lr1-automata-simple-cd-grammar](imgs/lr1-automata-simple-cd-grammar.png)
 
 ### Canonical LR(1) Parsing Table 
 
@@ -141,7 +141,7 @@ Using the canonical LR(1) parsing method, `yacv` can produce the following:
 ### Parsing Video 
 
 <video width="854" height="480" controls>
-<source src="videos/lr1-vid-simple-cd-grammar.mp4" type="video/mp4">
+<source src="vids/lr1-vid-simple-cd-grammar.mp4" type="video/mp4">
 Your browser does not support video tag
 </video>
 
@@ -163,14 +163,14 @@ String: id + id * id / id - id
 ### ManimGL rendering
 
 <video width="854" height="480" controls>
-<source src="videos/ll1/expr-demo-manimgl.mp4" type="video/mp4">
+<source src="vids/ll1/expr-demo-manimgl.mp4" type="video/mp4">
 Your browser does not support video tag
 </video>
 
 ### ManimCE rendering 
 
 <video width="854" height="480" controls>
-<source src="videos/ll1/expr-demo-manimce.mp4" type="video/mp4">
+<source src="vids/ll1/expr-demo-manimce.mp4" type="video/mp4">
 Your browser does not support video tag
 </video>
 
@@ -183,13 +183,13 @@ String: id + id * id / id - id
 ### ManimGL rendering 
 
 <video width="854" height="480" controls>
-<source src="videos/lalr1/expr-demo-manimgl.mp4" type="video/mp4">
+<source src="vids/lalr1/expr-demo-manimgl.mp4" type="video/mp4">
 Your browser does not support video tag
 </video>
 
 ### ManimCE rendering 
 
 <video width="854" height="480" controls>
-<source src="videos/lalr1/expr-demo-manimce.mp4" type="video/mp4">
+<source src="vids/lalr1/expr-demo-manimce.mp4" type="video/mp4">
 Your browser does not support video tag
 </video>
