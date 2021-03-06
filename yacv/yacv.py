@@ -72,6 +72,7 @@ def main():
     setup_logger()
     log = logging.getLogger('yacv')
     args = parse_args()
+    colors = args.colors if hasattr(args, 'colors') else None
     if not args.grammar or not args.string:
         log.fatal('Please provide both grammar and string') 
         exit(1)
@@ -104,7 +105,7 @@ def main():
         string_folder = os.path.join(folder, string_folder)
         os.makedirs(string_folder, exist_ok=True)
         fname = 'abstractsyntaxtree.pdf'
-        G = p.visualize_syntaxtree(deepcopy(string))
+        G = p.visualize_syntaxtree(deepcopy(string), colors)
         G.draw(os.path.join(string_folder, fname))
         log.info('Syntax tree visualized to {}'.format(os.path.join(folder, fname)))
     if args.vis_parsing:
@@ -123,7 +124,7 @@ def main():
             kwargs = manim_config 
         vis = LL1ParsingVisualizer(**kwargs) if args.parsing_algo == \
                 'll1' else LRParsingVisualizer(**kwargs)
-        vis.setup(p, deepcopy(string))
+        vis.setup(p, deepcopy(string), colors)
         if manimce:
             vis.render()
         else:

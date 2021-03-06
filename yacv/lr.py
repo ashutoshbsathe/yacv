@@ -279,9 +279,11 @@ class LRParser(object):
                 raise YACVError('Unknown error while parsing')
                 break
 
-    def visualize_syntaxtree(self, string):
+    def visualize_syntaxtree(self, string, colors=None):
         log = logging.getLogger('yacv')
         import pygraphviz as pgv
+        if colors is not None:
+            YACV_GRAPHVIZ_COLORS = colors 
         # Create the parse tree
         tree = self.parse(string)
 

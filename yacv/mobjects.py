@@ -177,7 +177,9 @@ def transform_graphviz_graphs(old, new):
 
     return anims 
 
-def ast_to_graphviz(ast, grammar):
+def ast_to_graphviz(ast, grammar, colors=None):
+    if colors:
+        YACV_GRAPHVIZ_COLORS = colors
     G = pgv.AGraph(name='AST{}'.format(ast.node_id), directed=True)
     stack = [ast]
     prods = []
@@ -236,7 +238,7 @@ def ast_to_graphviz(ast, grammar):
 
     return G, terminal_nodes 
 
-def stack_to_graphviz(stack, grammar):
+def stack_to_graphviz(stack, grammar, colors=None):
     prod_subgraphs = []
     terminal_nodes = []
     root_nodes = []
@@ -246,7 +248,7 @@ def stack_to_graphviz(stack, grammar):
             continue 
         if len(item.desc) > 1:
             root_nodes.append(item.node_id)
-        g, t_nodes = ast_to_graphviz(item, grammar) 
+        g, t_nodes = ast_to_graphviz(item, grammar, colors) 
         terminal_nodes.extend(t_nodes) 
 
         for n in g.nodes():

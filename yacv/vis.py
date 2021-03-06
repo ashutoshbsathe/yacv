@@ -19,7 +19,7 @@ from yacv.lr import *
 from yacv.mobjects import *
 
 class LL1ParsingVisualizer(Scene):
-    def setup(self, parser=None, string=None, **kwargs):
+    def setup(self, parser=None, string=None, colors=None, **kwargs):
         if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
             super().setup(**kwargs)
             return
@@ -32,6 +32,7 @@ class LL1ParsingVisualizer(Scene):
         if string[-1] != '$':
             string.append('$')
         self.string = string 
+        self.colors = colors 
         self.grammar_setup_done = True
         super().setup(**kwargs)
 
@@ -131,7 +132,7 @@ class LL1ParsingVisualizer(Scene):
             curr_stack_mobject = StackMobject(stack)
             anim_s = transform_stacks(old_stack_mobject, curr_stack_mobject)
             curr_mobject = GraphvizMobject(stack_to_graphviz([popped_stack[0]]\
-                    , p.grammar))
+                    , p.grammar, self.colors))
             if prev_mobject is not None:
                 anim_t = transform_graphviz_graphs(prev_mobject, curr_mobject)
             else:
@@ -161,7 +162,7 @@ class LL1ParsingVisualizer(Scene):
 
 
 class LRParsingVisualizer(Scene):
-    def setup(self, parser=None, string=None, **kwargs):
+    def setup(self, parser=None, string=None, colors=None, **kwargs):
         if hasattr(self, 'grammar_setup_done') and self.grammar_setup_done:
             super().setup(**kwargs)
             return
@@ -174,6 +175,7 @@ class LRParsingVisualizer(Scene):
         if string[-1] != '$':
             string.append('$')
         self.string = string
+        self.colors = colors
         self.grammar_setup_done = True
         super().setup(**kwargs)
 
@@ -240,7 +242,7 @@ class LRParsingVisualizer(Scene):
                 curr_stack_mobject = StackMobject(stack)
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
-                            p.grammar))
+                            p.grammar, self.colors))
                 string_text = [YACV_MANIM_STRING_LEADER]
                 string_text.extend([prepare_text(x) for x in string])
                 string_text.append(']')
@@ -342,7 +344,7 @@ class LRParsingVisualizer(Scene):
                 curr_stack_mobject = StackMobject(stack)
                 anim_s = transform_stacks(old_stack_mobject,curr_stack_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
-                        p.grammar))
+                        p.grammar, self.colors))
                 if prev_mobject == None:
                     anim_t = [ShowCreation(curr_mobject)]
                 else:
@@ -369,7 +371,7 @@ class LRParsingVisualizer(Scene):
                 self.play(ShowCreationThenDestructionAround(new_status_mobject))
                 self.remove(new_status_mobject)
                 curr_mobject = GraphvizMobject(stack_to_graphviz(stack, \
-                        p.grammar))
+                        p.grammar, self.colors))
                 anims = transform_graphviz_graphs(prev_mobject, curr_mobject)
                 new_string_mobject = Tex(YACV_MANIM_STRING_LEADER, ']')
                 new_string_mobject.move_to(string_pos)
