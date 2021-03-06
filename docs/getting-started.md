@@ -13,7 +13,7 @@ nav_order: 2
 3. `pandas`
 4. `manim` : `yacv` _should_ theoretically work with both manim versions ( [ManimGL](https://github.com/3b1b/manim) or [ManimCE](https://docs.manim.community/en/v0.4.0/installation.html#installing-manim) ) but ManimCE is recommended
 
-Issues with `pycairo` ? Check [this]
+Issues with `pycairo` ? Check [this](https://github.com/pygobject/pycairo/issues/148#issuecomment-770024652)
 
 To install `yacv`, clone the [yacv repository on GitHub](https://github.com/ashutoshbsathe/yacv) to your local machine and then install using pip
 

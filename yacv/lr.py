@@ -552,7 +552,6 @@ class LR1Parser(LRParser):
                 if len(self.parsing_table.at[state_id, col]) > 1:
                     self.is_valid = False
         self.parsing_table_built = True
-        self.parsing_table.to_csv('parsing_table.csv')
         if not self.is_valid:
             log.warning('Grammar is not valid')
         else:
