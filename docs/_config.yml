@@ -4,21 +4,21 @@ color_scheme: mygreen
 markdown: kramdown
 
 title: yacv
-description: Tools and libraries to run neural networks in Minecraft
+description: Yet Another Compiler Visualizer
 baseurl: /yacv
 
 search_enabled: true
 permalink: pretty
 
-footer_content: "Copyright &copy; 2020 Ashutosh Sathe. Distributed by a <a href=\"https://github.com/ashutoshbsathe/scarpet-nn/blob/master/LICENSE\">GPL v3 license.</a>"
+footer_content: "Copyright &copy; 2021 Ashutosh Sathe. Distributed by <a href=\"https://github.com/ashutoshbsathe/yacv/blob/master/LICENSE.md\">MIT license.</a>"
 
 ga_tracking: UA-163324683-1
 
 aux_links:
   "ashutoshbsathe.github.io":
     - "https://ashutoshbsathe.github.io"
-  "scarpet-nn on GitHub":
-    - "https://github.com/ashutoshbsathe/scarpet-nn"
+  "yacv on GitHub":
+    - "https://github.com/ashutoshbsathe/yacv"
 
 plugins:
   - jemoji
