@@ -1,7 +1,7 @@
 # Path to text file containing graammar productions
 grammar: "grammars/expression-grammar.txt"
 # String as space separated tokens
-string: "id + id * ( id / id / id ) - id"
+string: "id + id * ( id * id / id - id / id / id )"
 # Parsing algorithm. Choices = ['ll1', 'lr0', 'slr1', 'lr1', 'lalr1']
 parsing_algo: lr1
 # Should the parsing table be exported ?
