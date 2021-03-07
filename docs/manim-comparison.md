@@ -6,12 +6,13 @@ title: ManimGL vs ManimCE
 
 # ManimGL vs ManimCE
 
+`yacv` is written to be compatible with both [ManimGL - the original manim version by 3b1b](https://github.com/3b1b/manim) and [ManimCE - the community edition](https://github.com/ManimCommunity/manim). However, using ManimCE is recommended for most users. Personally, I could not get ManimGL to render anything above 720p using ManimGL. This could be just me having issue with my OpenGL, your results may vary. ManimCE has always worked perfectly and hence is recommended 
 
 ## LL(1) parsing
 
-Grammar: ll1-expression-grammar
+Grammar: [ll1-expression-grammar](https://github.com/ashutoshbsathe/yacv/blob/main/examples/grammars/ll1-expression-grammar.txt)
 
-String: id + id * id / id - id 
+String: `id + id * id / id - id`
 
 ### ManimGL rendering
 
@@ -29,9 +30,9 @@ Your browser does not support video tag
 
 ## LALR(1) parsing
 
-Grammar: expression-grammar 
+Grammar: [expression-grammar](https://github.com/ashutoshbsathe/yacv/blob/main/examples/grammars/expression-grammar.txt)
 
-String: id + id * id / id - id
+String: `id + id * id / id - id`
 
 ### ManimGL rendering 
 
