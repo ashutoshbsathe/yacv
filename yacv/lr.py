@@ -280,6 +280,7 @@ class LRParser(object):
                 break
 
     def visualize_syntaxtree(self, string, colors=None):
+        global YACV_GRAPHVIZ_COLORS
         log = logging.getLogger('yacv')
         import pygraphviz as pgv
         if colors is not None:

@@ -88,6 +88,7 @@ class LL1Parser(object):
         return popped_stack[0]
     
     def visualize_syntaxtree(self, string, colors=None):
+        global YACV_GRAPHVIZ_COLORS
         log = logging.getLogger('yacv')
         import pygraphviz as pgv
         if colors is not None:
@@ -171,7 +172,7 @@ class LL1Parser(object):
         G.node_attr['width'] = 0
         G.node_attr['margin'] = 0.1
         G.layout('dot')
-
+        G.write('thumbnail_sample.dot')
         log.info('Parse tree successfully visualized')
         return G
 
@@ -185,6 +186,6 @@ if __name__ == '__main__':
         ll1 = LL1Parser(sys.argv[1])
     else:
         ll1 = LL1Parser()
-    string = 'id + id * id / id - ( id )'
+    string = 'id + id'
     string = [x.strip() for x in string.split(' ')]
     ll1.visualize_syntaxtree(string)

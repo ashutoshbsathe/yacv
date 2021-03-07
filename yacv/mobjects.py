@@ -178,6 +178,7 @@ def transform_graphviz_graphs(old, new):
     return anims 
 
 def ast_to_graphviz(ast, grammar, colors=None):
+    global YACV_GRAPHVIZ_COLORS
     if colors:
         YACV_GRAPHVIZ_COLORS = colors
     G = pgv.AGraph(name='AST{}'.format(ast.node_id), directed=True)
