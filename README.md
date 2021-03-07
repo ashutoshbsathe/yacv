@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Getting comfortable with parsing can be tough. While the legendary ["Dragon Book"](https://suif.stanford.edu/dragonbook/) is an excellent resource for everything related to compilers, it still contains very minimal visualizations for the parsing process itself. That being said, there exist visualization tools such as [LR(0) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LR0/) and [LL(1) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LL1/) by Zak Kincaid and Shaowei Zhu, [JSMachines](http://jsmachines.sourceforge.net/machines/lr1.html), [Jison](https://zaa.ch/jison/try/usf/) etc. However, all of these tools are web-based and most tools show steps in a table which isn't very intuitive
+Getting comfortable with parsing can be tough. While the legendary ["Dragon Book"](https://suif.stanford.edu/dragonbook/) is an excellent resource for everything related to compilers, it still contains very minimal visualizations for the parsing process itself. That being said, there exist visualization tools such as [LR(0) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LR0/) and [LL(1) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LL1/) by Zak Kincaid and Shaowei Zhu, [JSMachines](http://jsmachines.sourceforge.net/machines/lr1.html), [Jison](https://zaa.ch/jison/try/usf/) etc. However, all of these tools are web-based and most of them show steps in a table which isn't very intuitive
 
 `yacv` attempts to overcome all these shortcomings by using [`manim`](https://github.com/3b1b/manim) 
 
@@ -27,7 +27,7 @@ Requirements:
 
 Issues with `pycairo` ? Check [this](https://github.com/pygobject/pycairo/issues/148#issuecomment-770024652)
 
-To install `yacv`, clone the [yacv repository on GitHub](https://github.com/ashutoshbsathe/yacv) to your local machine and then install using pip
+To install `yacv`, clone the [`yacv` repository on GitHub](https://github.com/ashutoshbsathe/yacv) to your local machine and then install using pip
 
 ```bash
 $ git clone https://github.com/ashutoshbsathe/yacv 
@@ -49,3 +49,8 @@ For more information, please refer to the [documentation](https://ashutoshbsathe
 
 ## License
 MIT
+
+## Interesting Reads 
+1. [A good, free book for interpreters](http://craftinginterpreters.com/)
+2. [GCC does not use machine generated parsers](https://stackoverflow.com/questions/6319086/are-gcc-and-clang-parsers-really-handwritten)
+3. [Why LL and LR parsing is hard ?](https://blog.reverberate.org/2013/09/ll-and-lr-in-context-why-parsing-tools.html)

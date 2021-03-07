@@ -1,0 +1,31 @@
+# Path to text file containing graammar productions
+grammar: "grammars/ll1-expression-grammar.txt"
+# String as space separated tokens
+string: "id + id "
+# Parsing algorithm. Choices = ['ll1', 'lr0', 'slr1', 'lr1', 'lalr1']
+parsing_algo: ll1
+# Should the parsing table be exported ?
+parsing-table: True
+# Should the resultant syntax tree be visualized ?
+vis-tree: True
+# Should the resultant LR automaton be visualized ? (valid for LR parsing only)
+# vis-automaton: True
+# Should the parsing process be visualized ? (Will use `manim` for animation)
+vis-parsing: True
+# Quality of manim video. Choices = ['480p', '720p', '1080p', '1440p', '2160p']
+manim-video-quality: "2160p"
+
+# Colors used for highlighting syntaxtree and animations (optional)
+colors: [
+    '#FF1493', # 'deeppink',
+    '#1E90FF', # 'dodgerblue',
+    '#8A2BE2', # 'blueviolet',
+    '#008B8B', # 'darkcyan',
+    '#FFFF00', # 'yellow',
+    '#191970', # 'mediumslateblue',
+    '#A52A2A', # 'brown',
+    '#FFA500', # 'orange',
+    '#008080', # 'teal',
+    '#2E8B57', # 'seagreen',
+    '#00FF7F', # 'springgreen',
+]

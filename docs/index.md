@@ -10,7 +10,7 @@ nav_order: 1
 
 ## Introduction
 
-Getting comfortable with parsing can be tough. While the legendary ["Dragon Book"](https://suif.stanford.edu/dragonbook/) is an excellent resource for everything related to compilers, it still contains very minimal visualizations for the parsing process itself. That being said, there exist visualization tools such as [LR(0) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LR0/) and [LL(1) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LL1/) by Zak Kincaid and Shaowei Zhu, [JSMachines](http://jsmachines.sourceforge.net/machines/lr1.html), [Jison](https://zaa.ch/jison/try/usf/) etc. However, all of these tools are web-based and most tools show steps in a table which isn't very intuitive
+Getting comfortable with parsing can be tough. While the legendary ["Dragon Book"](https://suif.stanford.edu/dragonbook/) is an excellent resource for everything related to compilers, it still contains very minimal visualizations for the parsing process itself. That being said, there exist visualization tools such as [LR(0) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LR0/) and [LL(1) parser visualizer](https://www.cs.princeton.edu/courses/archive/spring20/cos320/LL1/) by Zak Kincaid and Shaowei Zhu, [JSMachines](http://jsmachines.sourceforge.net/machines/lr1.html), [Jison](https://zaa.ch/jison/try/usf/) etc. However, all of these tools are web-based and most of them show steps in a table which isn't very intuitive
 
 `yacv` attempts to overcome all these shortcomings by using [`manim`](https://github.com/3b1b/manim) 
 

@@ -98,6 +98,8 @@ def main():
         G.draw(os.path.join(folder, fname))
         log.info('LR automaton visualized at {}'.format(os.path.join(folder, fname)))
     string = args.string.split(' ')
+    string = [x.strip() for x in string]
+    string = [x for x in string if x]
     if string[-1] != '$':
         string.append('$')
     if args.vis_tree:

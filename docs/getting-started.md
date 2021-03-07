@@ -15,7 +15,7 @@ nav_order: 2
 
 Issues with `pycairo` ? Check [this](https://github.com/pygobject/pycairo/issues/148#issuecomment-770024652)
 
-To install `yacv`, clone the [yacv repository on GitHub](https://github.com/ashutoshbsathe/yacv) to your local machine and then install using pip
+To install `yacv`, clone the [`yacv` repository on GitHub](https://github.com/ashutoshbsathe/yacv) to your local machine and then install using pip
 
 ```bash
 $ git clone https://github.com/ashutoshbsathe/yacv 
