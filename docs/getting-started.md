@@ -35,7 +35,7 @@ This should start visualizing LL(1) parsing for a [very simple LL(1) grammar](ht
 
 If everything run successfully, you should see a new folder named `yacv_ll1-simple/` in your directory. Explore this folder to examine the output
 
-To use `yacv` with your own grammar and string, simply write down your [grammar](/yacv/grammar) rules in a text file and use that to create a new [config](/yacv/config) for `yacv`. Then you can pass path to this config to `yacv` to get your visualizations.
+To use `yacv` with your own grammar and string, simply write down your [grammar](/yacv/grammar) rules in a text file and use that to create a new [config](/yacv/config) for `yacv`. Then you can pass path to this config to `yacv` to get your visualizations
 
 Also check out [`examples/`](https://github.com/ashutoshbsathe/yacv/tree/main/examples) directory for more such example configs
 
