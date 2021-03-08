@@ -1,6 +1,6 @@
 # yacv: Yet Another Compiler Visualizer
 
-`yacv` is a tool for visualizing various aspects of typical LL(1) and LR parsers
+`yacv` is a tool for visualizing various aspects of typical LL(1) and LR parsers. Check out [demo on YouTube](https://www.youtube.com/watch?v=BozB0O0__Qg) to see sample visualizations
 
 ## Introduction
 
