@@ -172,7 +172,7 @@ class LL1Parser(object):
         G.node_attr['width'] = 0
         G.node_attr['margin'] = 0.1
         G.layout('dot')
-        G.write('thumbnail_sample.dot')
+        
         log.info('Parse tree successfully visualized')
         return G
 
