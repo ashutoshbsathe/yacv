@@ -404,7 +404,7 @@ class LR0Parser(LRParser):
     # Ref: Parsing Techniques - Practical Guide 2nd Edition Sec.9.5.4
     def build_automaton(self):
         if self.automaton_built:
-            # TODO: Warn user
+            logging.getLogger('yacv').warning('Automaton built already')
             return
         init = LRAutomatonState(self.closure(LRItem(self.grammar.prods[0], 0)))
         self.build_automaton_from_init(init)
@@ -503,7 +503,7 @@ class SLR1Parser(LR0Parser):
 class LR1Parser(LRParser): 
     def build_automaton(self):
         if self.automaton_built:
-            # TODO: Warn user
+            logging.getLogger('yacv').warning('Automaton built already')
             return
         init = LRAutomatonState(self.closure(LRItem(
             self.grammar.prods[0], 0, ['$'])))

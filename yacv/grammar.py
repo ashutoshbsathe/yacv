@@ -2,6 +2,7 @@ import logging
 from collections import OrderedDict
 from pprint import pprint
 from yacv.constants import *
+from yacv.utils import YACVError
 class Production(object):
     def __init__(self, lhs=None, rhs=[]):
         self.lhs = lhs
@@ -51,11 +52,12 @@ class Grammar(object):
         self.prods = [] # list containing all the productions
         all_symbols = set()
         for line in lines:
-            # TODO: If ValueError is generated when splitting
-            # report unrecognized grammar
             if line == '':
                 continue
-            lhs, rhs = line.split('->')
+            try:
+                lhs, rhs = line.split('->')
+            except ValueError as e:
+                raise YACVError('Invalid grammar file')
             lhs = lhs.strip()
             rhs = [x for x in rhs.split(' ') if x]
             # TODO: find a better way to do this
