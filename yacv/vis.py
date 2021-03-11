@@ -1,6 +1,3 @@
-# only for being able to run via `manimgl`
-import sys
-sys.path.append('/home/ashutosh/parser-vis/')
 try:
     from manimlib import *
     manimce = False 

@@ -108,7 +108,6 @@ yacv_manim_config = {
         'mirror_module_path': False,
         'movie_file_extension': '.mp4',
         'open_file_upon_completion': True,
-        'output_directory': '/home/ashutosh/parser-vis/',
         'png_mode': 'RGB',
         'quiet': False,
         'save_last_frame': False,
