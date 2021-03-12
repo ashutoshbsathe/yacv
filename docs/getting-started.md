@@ -23,6 +23,29 @@ $ cd yacv
 $ pip install -e .
 ```
 
+## Notes for Ubuntu WSL
+
+Credit: [[Yashodhan Kadam]](https://in.linkedin.com/in/yashodhan-kadam-aa9534170)
+
+These instructions are for Ubuntu 20.04 WSL :
+
+1. Installing `manim` dependencies: (Note that `texlive-full` may need upwards of 5.5GB of free space)
+```bash
+$ sudo apt-get install python3-pip python3-cairo-dev libsdl-pango-dev ffmpeg texlive-full 
+$ pip3 install pycairo 
+```
+2. Installing `graphviz`:
+```bash 
+$ sudo apt-get install libgraphviz-dev graphviz-dev python3-pygraphviz python3-pygraphviz-dbg
+```
+
+Install `yacv` normally as mentioned but replace the command `pip` to `pip3`
+
+If you get an error saying `yacv: command not found` then you will need to manually add the path to installed library in your Ubuntu PATH environment variable. By default, `yacv` is installed in `/home/<your username>/.local/bin`. You can add this into the PATH by following command
+```bash 
+$ export PATH=$PATH:/home/<your username>/.local/bin
+```
+
 # Using `yacv`
 
 `yacv` needs a path to config file to work properly. To verify the installation, while in the directory where you cloned the `yacv` repo, run the following:
