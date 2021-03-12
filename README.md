@@ -35,6 +35,7 @@ $ cd yacv
 $ pip install -e .
 ```
 
+Check extra notes for install on Ubuntu WSL in the [docs](https://ashutoshbsathe.github.io/yacv/getting-started/#notes-for-ubuntu-wsl)
 ## Usage 
 To verify installation, run `yacv` with the example configuration [`example_config.yml`](example_config.yml)
 
