@@ -55,3 +55,5 @@ MIT
 1. [A good, free book for interpreters](http://craftinginterpreters.com/)
 2. [GCC does not use machine generated parsers](https://stackoverflow.com/questions/6319086/are-gcc-and-clang-parsers-really-handwritten)
 3. [Why LL and LR parsing is hard ?](https://blog.reverberate.org/2013/09/ll-and-lr-in-context-why-parsing-tools.html)
+
+I have also written a blog about how I built this project . Check it out [here](https://ashutoshbsathe.github.io/blog/2021/parsing-the-parser/)
